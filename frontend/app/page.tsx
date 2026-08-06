@@ -1,65 +1,106 @@
-import Image from "next/image";
+import Link from "next/link";
+import { Hero, MissionSpecs, MissionTimeline } from "@/components/landing";
+import type { SpecGroup } from "@/components/landing";
 
-export default function Home() {
+/**
+ * Vista 01 — Landing
+ * Datos estáticos de presentación. Se conectarán a lib/api/client.ts
+ * cuando se implemente esa capa.
+ */
+export default function HomePage() {
   return (
-    <div className="flex flex-col flex-1 items-center justify-center bg-zinc-50 font-sans dark:bg-black">
-      <main className="flex flex-1 w-full max-w-3xl flex-col items-center justify-between py-32 px-16 bg-white dark:bg-black sm:items-start">
-        <Image
-          className="dark:invert"
-          src="/next.svg"
-          alt="Next.js logo"
-          width={100}
-          height={20}
-          priority
-        />
-        <div className="flex flex-col items-center gap-6 text-center sm:items-start sm:text-left">
-          <h1 className="max-w-xs text-3xl font-semibold leading-10 tracking-tight text-black dark:text-zinc-50">
-            To get started, edit the page.tsx file.
-          </h1>
-          <p className="max-w-md text-lg leading-8 text-zinc-600 dark:text-zinc-400">
-            Looking for a starting point or more instructions? Head over to{" "}
-            <a
-              href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
-            >
-              Templates
-            </a>{" "}
-            or the{" "}
-            <a
-              href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
-            >
-              Learning
-            </a>{" "}
-            center.
-          </p>
+    <section aria-labelledby="heroTitle">
+      <Hero
+        missionName="Nanonauta"
+        objective="Levantar un perfil atmosférico vertical (presión, temperatura, humedad) durante ascenso y descenso, validar el enlace LoRa de largo alcance y recuperar la cápsula intacta."
+        launchDate="2026-07-25 15:40:00"
+        site="Uruapan Michoacán (ITSU)"
+        subsystemCount={10}
+        stats={{ apogeeM: "—", durationS: "—", packets: "—", driftKm: "—" }}
+        sheet={MISSION_SHEET}
+      />
+
+      <MissionSpecs groups={SPEC_GROUPS} />
+
+      <MissionTimeline />
+
+      {/* CTA BAND */}
+      <div className="container section section--tight">
+        <div className="cta-band">
+          <div>
+            <h2>El interior, capa por capa</h2>
+            <p>
+              La cápsula se abre en el visor 3D: pasa el cursor sobre cada PCB,
+              sensor o módulo para ver el modelo exacto que usamos y su ficha
+              técnica.
+            </p>
+          </div>
+          <div className="btn-row">
+            <Link className="btn btn--primary" href="/modelo-3d">
+              Abrir el visor 3D
+            </Link>
+          </div>
         </div>
-        <div className="flex flex-col gap-4 text-base font-medium sm:flex-row">
-          <a
-            className="flex h-12 w-full items-center justify-center gap-2 rounded-full bg-foreground px-5 text-background transition-colors hover:bg-[#383838] dark:hover:bg-[#ccc] md:w-[158px]"
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            <Image
-              className="dark:invert"
-              src="/vercel.svg"
-              alt="Vercel logomark"
-              width={16}
-              height={16}
-            />
-            Deploy Now
-          </a>
-          <a
-            className="flex h-12 w-full items-center justify-center rounded-full border border-solid border-black/[.08] px-5 transition-colors hover:border-transparent hover:bg-black/[.04] dark:border-white/[.145] dark:hover:bg-[#1a1a1a] md:w-[158px]"
-            href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Documentation
-          </a>
-        </div>
-      </main>
-    </div>
+      </div>
+    </section>
   );
 }
+
+/* ─── Datos estáticos (se moverán a lib/api/mock cuando se cree esa capa) ─── */
+
+const MISSION_SHEET: [string, string][] = [
+  ["Identificador", "PS-01 / CANSAT"],
+  ["Lanzamiento", "2026-07-25 15:40:00 UTC"],
+  ["Sitio", "Uruapan Michoacán (ITSU)"],
+  ["Elevación del sitio", "2 500 m MSL"],
+  ["Altitud objetivo", "1 200 m AGL"],
+  ["Apogeo registrado", "—"],
+  ["Temperatura mínima", "—"],
+  ["Aceleración pico", "—"],
+  ["Último paquete", "—"],
+  ["Estado", "Sin datos"],
+];
+
+const SPEC_GROUPS: SpecGroup[] = [
+  {
+    title: "Cápsula",
+    items: [
+      ["Formato", "Tipo CanSat, cilíndrico"],
+      ["Diámetro / alto", "60 mm × 110 mm"],
+      ["Masa en vuelo", "350 g"],
+      ["Estructura", "Impresión 3D PETG + varillas guía"],
+      ["Recuperación", "Paracaídas de nylon, descenso ≈5 m/s"],
+    ],
+  },
+  {
+    title: "Cómputo y almacenamiento",
+    items: [
+      ["MCU", "Por confirmar"],
+      ["Memoria", "EEPROM I²C + socket microSD"],
+      ["Puertos", "USB-Serial, USB-OTG, bus I²C/SPI"],
+      ["Visión", "FPGA Spartan-6 XC6SLX6 + SDRAM"],
+    ],
+  },
+  {
+    title: "Sensado",
+    items: [
+      ["Inercial", "MPU6050 (6 ejes)"],
+      ["Magnetómetro", "AK8975"],
+      ["Temperatura", "TMP102"],
+      ["Presión / humedad", "BME280"],
+      ["GPS", "Quectel L70"],
+    ],
+  },
+  {
+    title: "Enlace y energía",
+    items: [
+      ["Telemetría", "LoRa RA-02 (SX1278), 433 MHz"],
+      ["Cadencia", "1 paquete/s"],
+      ["Alcance esperado", "≈5 km línea de vista"],
+      ["Batería", "LiPo 1S 1200 mAh, 3.7 V nom."],
+      ["Autonomía estimada", "≈2 h en transmisión"],
+    ],
+  },
+];
+
+
