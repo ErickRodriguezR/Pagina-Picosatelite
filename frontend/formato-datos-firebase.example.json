@@ -21,7 +21,6 @@
     "temperatura_c": 21.71,
     "presion_hpa": 710.34,
     "humedad_pct": 45.2,
-    "bateria_v": 4.01,
     "gps": {
       "lat": 19.475882,
       "lng": -102.072640,
@@ -68,11 +67,6 @@
       "tipo": "number",
       "unidad": "% humedad relativa",
       "origen": "BME280"
-    },
-    "bateria_v": {
-      "tipo": "number",
-      "unidad": "Volts",
-      "origen": "ADC del MCU"
     },
     "gps.lat": {
       "tipo": "number",

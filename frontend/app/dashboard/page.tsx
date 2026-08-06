@@ -41,7 +41,7 @@ export default function DashboardPage() {
           <TelemetryChart id="plotAltitude" title="Altitud vs. tiempo" hint="zoom con arrastre · doble clic para reiniciar" wide tall />
           <TelemetryChart id="plotTempHum" title="Temperatura y humedad" hint="TMP102 · BME280" />
           <TelemetryChart id="plotPressure" title="Presión barométrica" hint="BME280" />
-          <TelemetryChart id="plotPower" title="Batería y enlace LoRa" hint="V · RSSI dBm" />
+          <TelemetryChart id="plotPower" title="Enlace LoRa" hint="RSSI dBm" />
           <TelemetryChart id="plotImu" title="Inercial" hint="MPU6050 · |a| y |ω|" />
           <TelemetryChart id="plotTrajectory" title="Trayectoria 3D" hint="GPS L70 · lat/lng/altitud, arrastra para girar" wide tall />
         </div>
@@ -80,7 +80,6 @@ const KPI_CARDS = [
   { label: "Apogeo", value: "—", unit: "m", tone: "amber" },
   { label: "Temp. mínima", value: "—", unit: "°C" },
   { label: "Presión mínima", value: "—", unit: "hPa" },
-  { label: "Batería final", value: "—", unit: "V" },
   { label: "RSSI mínimo", value: "—", unit: "dBm" },
   { label: "Paquetes", value: "—", unit: "", tone: "green" },
 ];
@@ -99,7 +98,7 @@ const TABLE_COLUMNS: DataTableColumn[] = [
   { key: "temperatura", label: "Temp. (°C)" },
   { key: "presion", label: "Pres. (hPa)" },
   { key: "humedad", label: "Hum. (%)" },
-  { key: "bateria", label: "Bat. (V)" },
+
   { key: "rssi", label: "RSSI (dBm)" },
   { key: "lat", label: "Lat." },
   { key: "lng", label: "Lng." },

@@ -97,7 +97,6 @@ const SPEC_GROUPS: SpecGroup[] = [
       ["Telemetría", "LoRa RA-02 (SX1278), 433 MHz"],
       ["Cadencia", "1 paquete/s"],
       ["Alcance esperado", "≈5 km línea de vista"],
-      ["Batería", "LiPo 1S 1200 mAh, 3.7 V nom."],
       ["Autonomía estimada", "≈2 h en transmisión"],
     ],
   },

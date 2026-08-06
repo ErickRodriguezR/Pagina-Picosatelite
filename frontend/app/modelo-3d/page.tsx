@@ -108,7 +108,6 @@ const LAYERS: LayerSpec[] = [
   { id: "pcb-sensores", nombre: "Módulo de sensores", modelo: "PCB roja: AK8975, MPU6050, TMP102, BME280", categoria: "PCB", color: "#8E2230" },
   { id: "pcb-microcontrolador", nombre: "Microcontrolador", modelo: "PCB verde de control (MCU por confirmar)", categoria: "PCB", color: "#1F7A44" },
   { id: "interruptor", nombre: "Interruptor de encendido", modelo: "Interruptor deslizante lateral", categoria: "Control", color: "#FFB020" },
-  { id: "bateria", nombre: "Batería", modelo: "LiPo 1S 1200 mAh (bolsa)", categoria: "Energía", color: "#243755" },
   { id: "pcb-vision", nombre: "Módulo de visión", modelo: "FPGA Spartan-6 XC6SLX6 + SDRAM", categoria: "PCB", color: "#3B2050" },
   { id: "camara", nombre: "Cámara fotográfica", modelo: "OV7670 con lente M12", categoria: "Carga útil", color: "#0E1726" },
   { id: "estructura", nombre: "Estructura en 3D", modelo: "Bastidor PETG + 4 varillas guía M3", categoria: "Mecánica", color: "#5B6C88" },

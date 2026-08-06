@@ -70,7 +70,6 @@ export interface TelemetryReading {
   temperatura_c: number;
   presion_hpa: number;
   humedad_pct: number;
-  bateria_v: number;
   gps: GpsReading;
   acelerometro: Vector3Reading;
   giroscopio: Vector3Reading;

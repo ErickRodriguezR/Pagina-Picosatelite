@@ -90,7 +90,7 @@
     "nombre": "Interruptor de encendido",
     "categoria": "Control",
     "modelo": "Interruptor deslizante lateral accesible con la carcasa cerrada",
-    "descripcion": "Corta la alimentación de la batería. Queda accesible desde el exterior para armar la cápsula montada en la rampa.",
+    "descripcion": "Corta la alimentación general. Queda accesible desde el exterior para armar la cápsula montada en la rampa.",
     "specs": {
       "Tipo": "SPDT deslizante",
       "Corriente": "≤ 1 A",
@@ -101,23 +101,7 @@
     "stack": 4,
     "color": "#FFB020"
   },
-  {
-    "id": "bateria",
-    "nombre": "Batería",
-    "categoria": "Energía",
-    "modelo": "LiPo 1S 1200 mAh (bolsa)",
-    "descripcion": "Celda LiPo en el centro de masa de la cápsula, sujeta a la estructura para que no se desplace durante el impulso.",
-    "specs": {
-      "Química": "Li-Po 1S",
-      "Capacidad": "1200 mAh",
-      "Voltaje nominal": "3.7 V",
-      "Rango útil": "4.2 V – 3.5 V",
-      "Autonomía": "≈2 h transmitiendo"
-    },
-    "mesh_name": "battery_pack",
-    "stack": 3,
-    "color": "#243755"
-  },
+
   {
     "id": "pcb-vision",
     "nombre": "Módulo de visión",
