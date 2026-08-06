@@ -1,0 +1,123 @@
+{
+  "_descripcion": "Ejemplo del formato que el backend debe subir a Firebase para que la web lo consuma correctamente.",
+  "_notas": [
+    "Cada documento/nodo en Firebase representa UN paquete de telemetría.",
+    "El campo 'timestamp' debe ser string ISO 8601 (UTC).",
+    "El campo 'estado' solo acepta: 'pre-lanzamiento', 'ascenso', 'descenso', 'aterrizado'.",
+    "Los campos de vectores (acelerometro, giroscopio) tienen x, y, z.",
+    "El campo 'velocidad_vertical_ms' es opcional; si no lo calculas en el backend, la web puede derivarlo.",
+    "Todos los valores numéricos deben ser números, NO strings."
+  ],
+
+  "_estructura_firebase_sugerida": {
+    "coleccion": "telemetry",
+    "documento_id": "auto-generado o timestamp en ms",
+    "ejemplo_ruta": "telemetry/1753454408000"
+  },
+
+  "paquete_ejemplo": {
+    "timestamp": "2026-07-25T15:40:08.000Z",
+    "altitud_m": 420.5,
+    "temperatura_c": 21.71,
+    "presion_hpa": 710.34,
+    "humedad_pct": 45.2,
+    "bateria_v": 4.01,
+    "gps": {
+      "lat": 19.475882,
+      "lng": -102.072640,
+      "alt_m": 2920.5,
+      "satelites": 7
+    },
+    "acelerometro": {
+      "x": 0.11,
+      "y": -0.06,
+      "z": 3.82
+    },
+    "giroscopio": {
+      "x": 4.8,
+      "y": -3.2,
+      "z": 8.7
+    },
+    "rssi_dbm": -55.2,
+    "velocidad_vertical_ms": 92.4,
+    "estado": "ascenso"
+  },
+
+  "_campos": {
+    "timestamp": {
+      "tipo": "string",
+      "formato": "ISO 8601 UTC (ej: 2026-07-25T15:40:08.000Z)",
+      "origen": "Reloj del MCU o timestamp al recibir en la estación de tierra"
+    },
+    "altitud_m": {
+      "tipo": "number",
+      "unidad": "metros (relativa al punto de lanzamiento)",
+      "origen": "BME280 (presión → altitud barométrica)"
+    },
+    "temperatura_c": {
+      "tipo": "number",
+      "unidad": "°C",
+      "origen": "BME280 o TMP102"
+    },
+    "presion_hpa": {
+      "tipo": "number",
+      "unidad": "hPa",
+      "origen": "BME280"
+    },
+    "humedad_pct": {
+      "tipo": "number",
+      "unidad": "% humedad relativa",
+      "origen": "BME280"
+    },
+    "bateria_v": {
+      "tipo": "number",
+      "unidad": "Volts",
+      "origen": "ADC del MCU"
+    },
+    "gps.lat": {
+      "tipo": "number",
+      "unidad": "grados decimales",
+      "origen": "Módulo GPS (Quectel L70 o similar)"
+    },
+    "gps.lng": {
+      "tipo": "number",
+      "unidad": "grados decimales",
+      "origen": "Módulo GPS"
+    },
+    "gps.alt_m": {
+      "tipo": "number",
+      "unidad": "metros sobre el nivel del mar (msnm)",
+      "origen": "Módulo GPS"
+    },
+    "gps.satelites": {
+      "tipo": "number",
+      "unidad": "cantidad de satélites visibles",
+      "origen": "Módulo GPS"
+    },
+    "acelerometro.x/y/z": {
+      "tipo": "number",
+      "unidad": "g (aceleración gravitacional)",
+      "origen": "MPU6050"
+    },
+    "giroscopio.x/y/z": {
+      "tipo": "number",
+      "unidad": "°/s (grados por segundo)",
+      "origen": "MPU6050"
+    },
+    "rssi_dbm": {
+      "tipo": "number",
+      "unidad": "dBm",
+      "origen": "Módulo LoRa (RA-02/SX1278) medido al recibir"
+    },
+    "velocidad_vertical_ms": {
+      "tipo": "number (opcional)",
+      "unidad": "m/s (positivo = subiendo, negativo = bajando)",
+      "origen": "Calculado: delta_altitud / delta_tiempo"
+    },
+    "estado": {
+      "tipo": "string",
+      "valores_permitidos": ["pre-lanzamiento", "ascenso", "descenso", "aterrizado"],
+      "origen": "Lógica del backend basada en velocidad vertical y altitud"
+    }
+  }
+}
