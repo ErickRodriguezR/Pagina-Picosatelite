@@ -1,0 +1,60 @@
+/* =============================================================================
+   TOKENS DE DISEÑO — Pico Satélite PS-01
+   Paleta y tipografías fijadas por build-rules.md §3.
+   Extensión documentada: --data-1..--data-5 son los únicos colores adicionales,
+   necesarios para distinguir series en gráficas multi-serie.
+   ============================================================================= */
+
+:root {
+  /* Fondos */
+  --bg-deep: #0B1220;
+  --bg-panel: #121B2E;
+  --bg-panel-2: #0F1728;
+
+  /* Líneas y bordes */
+  --line-blueprint: #2A3B57;
+
+  /* Texto */
+  --text-primary: #E7ECF2;
+  --text-muted: #8B9AB3;
+
+  /* Acentos */
+  --accent-amber: #FFB020;
+  --accent-green: #35D07F;
+
+  /* Serie de datos (extensión mínima para gráficas multi-serie) */
+  --data-1: #FFB020;
+  --data-2: #35D07F;
+  --data-3: #5B8CC7;
+  --data-4: #C98BD1;
+  --data-5: #8B9AB3;
+
+  /* Tipografía */
+  --font-display: "Space Grotesk", "Segoe UI", system-ui, sans-serif;
+  --font-body: "Inter", "Segoe UI", system-ui, -apple-system, sans-serif;
+  --font-mono: "JetBrains Mono", "Cascadia Mono", Consolas, ui-monospace, monospace;
+
+  /* Radios */
+  --radius-sm: 6px;
+  --radius: 10px;
+  --radius-lg: 16px;
+
+  /* Espaciado */
+  --space-1: 4px;
+  --space-2: 8px;
+  --space-3: 12px;
+  --space-4: 16px;
+  --space-5: 24px;
+  --space-6: 32px;
+  --space-7: 48px;
+  --space-8: 72px;
+
+  /* Sombras */
+  --shadow-panel: 0 18px 40px -28px rgba(0, 0, 0, 0.9);
+
+  /* Layout */
+  --header-h: 60px;
+
+  /* Transiciones */
+  --transition: 180ms cubic-bezier(0.32, 0.72, 0.28, 1);
+}
