@@ -1,0 +1,171 @@
+[
+  {
+    "id": "paracaidas",
+    "nombre": "Paracaídas",
+    "categoria": "Recuperación",
+    "modelo": "Domo hemisférico de nylon ripstop, Ø450 mm",
+    "descripcion": "Empacado sobre la bahía de aviónica. Se libera en apogeo y frena el descenso para que la electrónica y la cámara lleguen intactas al suelo.",
+    "specs": {
+      "Material": "Nylon ripstop 40 den",
+      "Diámetro": "450 mm",
+      "Despliegue": "Apogeo + 1 s (≈1 200 m)",
+      "Descenso objetivo": "≈5 m/s",
+      "Líneas": "6 × cordón de nylon 1.5 mm"
+    },
+    "mesh_name": "parachute_group",
+    "stack": 8,
+    "color": "#E7ECF2"
+  },
+  {
+    "id": "pcb-gps-transmisor",
+    "nombre": "GPS y transmisor",
+    "categoria": "PCB",
+    "modelo": "Quectel L70 (GPS) + etapa de transmisión",
+    "descripcion": "Capa superior de la aviónica: receptor GPS con antena cerámica mirando al cielo y la etapa de transmisión que entrega la posición a la estación de tierra.",
+    "specs": {
+      "Módulo GPS": "Quectel L70",
+      "Antena": "Parche cerámico 15 × 15 mm",
+      "Salida": "NMEA por UART, 1 Hz",
+      "Fix típico": "< 35 s en frío",
+      "Interfaz": "UART hacia el MCU"
+    },
+    "mesh_name": "pcb_gps_layer",
+    "stack": 7,
+    "color": "#1F6F4A"
+  },
+  {
+    "id": "pcb-lora",
+    "nombre": "Comunicación LoRa",
+    "categoria": "PCB",
+    "modelo": "Ai-Thinker RA-02 (Semtech SX1278)",
+    "descripcion": "Enlace de telemetría de largo alcance en 433 MHz. Mantiene el contacto durante el vuelo y sirve de baliza tras el aterrizaje.",
+    "specs": {
+      "Módulo": "RA-02 (SX1278)",
+      "Banda": "433 MHz",
+      "Alcance esperado": "≈5 km línea de vista",
+      "Antena": "Monopolo λ/4 con plano de tierra",
+      "Interfaz": "SPI + IRQ"
+    },
+    "mesh_name": "pcb_lora_layer",
+    "stack": 6,
+    "color": "#16304F"
+  },
+  {
+    "id": "pcb-sensores",
+    "nombre": "Módulo de sensores",
+    "categoria": "PCB",
+    "modelo": "PCB roja de sensado inercial y ambiental",
+    "descripcion": "PCB roja con sensores del perfil atmosférico y de actitud de la cápsula. Cada chip puede sustituirse por su modelo CAD cuando exista.",
+    "specs": {
+      "Magnetómetro": "AK8975",
+      "IMU": "MPU6050",
+      "Temperatura": "TMP102",
+      "Presión / humedad": "BME280",
+      "Estado": "LED RGB",
+      "Bus": "I²C compartido"
+    },
+    "mesh_name": "pcb_sensors_layer",
+    "stack": 5,
+    "color": "#8E2230"
+  },
+  {
+    "id": "pcb-microcontrolador",
+    "nombre": "Microcontrolador",
+    "categoria": "PCB",
+    "modelo": "PCB verde de control (MCU por confirmar)",
+    "descripcion": "Cerebro del pico satélite: muestrea sensores, arma paquetes de telemetría, los guarda en microSD y los entrega al módulo LoRa.",
+    "specs": {
+      "MCU": "Por confirmar",
+      "Memoria": "EEPROM I²C",
+      "Almacenamiento": "Socket microSD",
+      "Puertos": "USB-Serial y USB-OTG",
+      "Comunicación": "I²C / SPI / UART"
+    },
+    "mesh_name": "pcb_mcu_layer",
+    "stack": 4,
+    "color": "#1F7A44"
+  },
+  {
+    "id": "interruptor",
+    "nombre": "Interruptor de encendido",
+    "categoria": "Control",
+    "modelo": "Interruptor deslizante lateral accesible con la carcasa cerrada",
+    "descripcion": "Corta la alimentación de la batería. Queda accesible desde el exterior para armar la cápsula montada en la rampa.",
+    "specs": {
+      "Tipo": "SPDT deslizante",
+      "Corriente": "≤ 1 A",
+      "Acceso": "Ventana lateral de la carcasa",
+      "Función": "Armado / seguro en tierra"
+    },
+    "mesh_name": "power_switch",
+    "stack": 4,
+    "color": "#FFB020"
+  },
+  {
+    "id": "bateria",
+    "nombre": "Batería",
+    "categoria": "Energía",
+    "modelo": "LiPo 1S 1200 mAh (bolsa)",
+    "descripcion": "Celda LiPo en el centro de masa de la cápsula, sujeta a la estructura para que no se desplace durante el impulso.",
+    "specs": {
+      "Química": "Li-Po 1S",
+      "Capacidad": "1200 mAh",
+      "Voltaje nominal": "3.7 V",
+      "Rango útil": "4.2 V – 3.5 V",
+      "Autonomía": "≈2 h transmitiendo"
+    },
+    "mesh_name": "battery_pack",
+    "stack": 3,
+    "color": "#243755"
+  },
+  {
+    "id": "pcb-vision",
+    "nombre": "Módulo de visión",
+    "categoria": "PCB",
+    "modelo": "FPGA Xilinx Spartan-6 XC6SLX6 + SDRAM",
+    "descripcion": "Captura y almacena imagen con la FPGA como controlador de cámara y memoria externa como buffer de cuadro.",
+    "specs": {
+      "FPGA": "Spartan-6 XC6SLX6",
+      "Memoria": "SDRAM externa",
+      "Cámara": "OV7670 (640×480)",
+      "Función": "Buffer de cuadro y captura",
+      "Interfaz": "Bus paralelo + SCCB"
+    },
+    "mesh_name": "pcb_vision_layer",
+    "stack": 2,
+    "color": "#3B2050"
+  },
+  {
+    "id": "camara",
+    "nombre": "Cámara fotográfica",
+    "categoria": "Carga útil",
+    "modelo": "OV7670 con lente M12",
+    "descripcion": "Pieza independiente montada en la base, apuntando hacia abajo por una ventana de la carcasa para fotografiar el terreno durante el descenso.",
+    "specs": {
+      "Sensor": "OV7670",
+      "Resolución": "640 × 480",
+      "Lente": "M12, campo ≈70°",
+      "Orientación": "Nadir (hacia el suelo)",
+      "Control": "FPGA vía SCCB"
+    },
+    "mesh_name": "camera_body",
+    "stack": 1,
+    "color": "#0E1726"
+  },
+  {
+    "id": "estructura",
+    "nombre": "Estructura en 3D",
+    "categoria": "Mecánica",
+    "modelo": "Bastidor impreso en PETG + 4 varillas guía",
+    "descripcion": "Bastidor impreso que apila las PCBs a distancia fija, transmite cargas del impulso y blinda la electrónica en el impacto.",
+    "specs": {
+      "Material": "PETG impreso al 30% relleno",
+      "Varillas": "4 × M3 de acero",
+      "Separación": "18 mm entre PCBs",
+      "Función": "Soporte, alineación y blindaje"
+    },
+    "mesh_name": "structure_group",
+    "stack": 0,
+    "color": "#5B6C88"
+  }
+]

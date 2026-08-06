@@ -1,0 +1,11 @@
+{
+  "aterrizo": true,
+  "timestamp": "2026-07-25T15:44:00.000Z",
+  "coordenadas": {
+    "lat": 19.487412,
+    "lng": -102.061884
+  },
+  "metodo_deteccion": "Altitud barométrica estable (< 5 m) durante 30 s y sin variación de GPS (placeholder)",
+  "ultimo_paquete": "2026-07-25T15:45:00.000Z",
+  "precision_m": 12
+}

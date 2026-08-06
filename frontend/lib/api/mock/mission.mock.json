@@ -1,0 +1,65 @@
+{
+  "nombre": "Nanonauta",
+  "objetivo": "Levantar un perfil atmosférico vertical (presión, temperatura, humedad) durante ascenso y descenso, validar el enlace LoRa de largo alcance y recuperar la cápsula intacta.",
+  "fecha_lanzamiento": "2026-07-25T15:40:00.000Z",
+  "altitud_objetivo_m": 1200,
+  "componentes": [
+    "paracaidas",
+    "pcb-gps-transmisor",
+    "pcb-microcontrolador",
+    "bateria",
+    "interruptor",
+    "pcb-sensores",
+    "pcb-lora",
+    "pcb-vision",
+    "camara",
+    "estructura"
+  ],
+  "sitio_lanzamiento": {
+    "nombre": "Uruapan Michoacán (Instituto Tecnológico Superior de Uruapan)",
+    "lat": 19.475624903182172,
+    "lng": -102.07301012699122,
+    "elevacion_m": 2500
+  },
+  "especificaciones": [
+    {
+      "grupo": "Cápsula",
+      "items": [
+        ["Formato", "Tipo CanSat, cilíndrico"],
+        ["Diámetro / alto", "60 mm × 110 mm"],
+        ["Masa en vuelo", "350 g"],
+        ["Estructura", "Impresión 3D PETG + varillas guía"],
+        ["Recuperación", "Paracaídas de nylon, descenso ≈5 m/s"]
+      ]
+    },
+    {
+      "grupo": "Cómputo y almacenamiento",
+      "items": [
+        ["MCU", "Por confirmar"],
+        ["Memoria", "EEPROM I²C + socket microSD"],
+        ["Puertos", "USB-Serial, USB-OTG, bus I²C/SPI"],
+        ["Visión", "FPGA Spartan-6 XC6SLX6 + SDRAM"]
+      ]
+    },
+    {
+      "grupo": "Sensado",
+      "items": [
+        ["Inercial", "MPU6050 (6 ejes)"],
+        ["Magnetómetro", "AK8975"],
+        ["Temperatura", "TMP102"],
+        ["Presión / humedad", "BME280"],
+        ["GPS", "Quectel L70"]
+      ]
+    },
+    {
+      "grupo": "Enlace y energía",
+      "items": [
+        ["Telemetría", "LoRa RA-02 (SX1278), 433 MHz"],
+        ["Cadencia", "1 paquete/s"],
+        ["Alcance esperado", "≈5 km línea de vista"],
+        ["Batería", "LiPo 1S 1200 mAh, 3.7 V nom."],
+        ["Autonomía estimada", "≈2 h en transmisión"]
+      ]
+    }
+  ]
+}
