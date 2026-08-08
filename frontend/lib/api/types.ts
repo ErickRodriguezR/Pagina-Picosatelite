@@ -68,11 +68,12 @@ export interface TelemetryReading {
   timestamp: string;
   altitud_m: number;
   temperatura_c: number;
+  temperatura_mpu_c: number;
   presion_hpa: number;
-  humedad_pct: number;
   gps: GpsReading;
   acelerometro: Vector3Reading;
   giroscopio: Vector3Reading;
+  magnetometro: Vector3Reading;
   rssi_dbm: number;
   estado: FlightPhase;
   velocidad_vertical_ms?: number;
