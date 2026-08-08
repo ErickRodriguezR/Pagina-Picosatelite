@@ -20,7 +20,7 @@ const PHASES: TimelinePhase[] = [
     key: "ascenso",
     label: "Ascenso",
     description:
-      "Lanzamiento asistido por cohete o globo. Adquisición de telemetría a 5 Hz. BMP180 registra presión decreciente, GPS fija posición.",
+      "Lanzamiento asistido por cohete o globo. Adquisición de telemetría a 1 Hz. BMP280 registra presión decreciente, GPS fija posición.",
   },
   {
     key: "apogeo",

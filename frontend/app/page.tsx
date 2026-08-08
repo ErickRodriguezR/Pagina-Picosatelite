@@ -75,20 +75,19 @@ const SPEC_GROUPS: SpecGroup[] = [
   {
     title: "Cómputo y almacenamiento",
     items: [
-      ["MCU", "Por confirmar"],
-      ["Memoria", "EEPROM I²C + socket microSD"],
-      ["Puertos", "USB-Serial, USB-OTG, bus I²C/SPI"],
-      ["Visión", "FPGA Spartan-6 XC6SLX6 + SDRAM"],
+      ["MCU", "Waveshare RP2040-Zero (ARM Cortex-M0+ dual-core)"],
+      ["Almacenamiento", "microSD vía SPI1"],
+      ["Puertos", "USB-Serial, bus I²C, SPI1, UART"],
     ],
   },
   {
     title: "Sensado",
     items: [
-      ["Inercial", "MPU6050 (6 ejes)"],
-      ["Magnetómetro", "AK8975"],
-      ["Temperatura", "TMP102"],
-      ["Presión / humedad", "BME280"],
-      ["GPS", "Quectel L70"],
+      ["Inercial", "MPU-6050 (acelerómetro ±2g + giroscopio ±250°/s)"],
+      ["Magnetómetro", "QMC5883P (3 ejes, rango ±8 Gauss)"],
+      ["Temperatura", "MPU-6050 (interna) + BMP280"],
+      ["Presión / altitud", "BMP280"],
+      ["GPS", "ATGM336H (UART 9600 baud)"],
     ],
   },
   {
