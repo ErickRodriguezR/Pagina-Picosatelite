@@ -4,7 +4,7 @@
     "nombre": "Paracaídas",
     "categoria": "Recuperación",
     "modelo": "Domo hemisférico de nylon ripstop, Ø450 mm",
-    "descripcion": "Empacado sobre la bahía de aviónica. Se libera en apogeo y frena el descenso para que la electrónica y la cámara lleguen intactas al suelo.",
+    "descripcion": "Empacado sobre la bahía de aviónica. Se libera en apogeo y frena el descenso para que la electrónica llegue intacta al suelo.",
     "specs": {
       "Material": "Nylon ripstop 40 den",
       "Diámetro": "450 mm",
@@ -18,16 +18,16 @@
   },
   {
     "id": "pcb-gps-transmisor",
-    "nombre": "GPS y transmisor",
+    "nombre": "GPS",
     "categoria": "PCB",
-    "modelo": "Quectel L70 (GPS) + etapa de transmisión",
-    "descripcion": "Capa superior de la aviónica: receptor GPS con antena cerámica mirando al cielo y la etapa de transmisión que entrega la posición a la estación de tierra.",
+    "modelo": "ATGM336H",
+    "descripcion": "Receptor GPS con antena cerámica mirando al cielo. Proporciona posición geográfica (latitud, longitud, altitud) y número de satélites visibles vía UART a 9600 baud.",
     "specs": {
-      "Módulo GPS": "Quectel L70",
-      "Antena": "Parche cerámico 15 × 15 mm",
-      "Salida": "NMEA por UART, 1 Hz",
-      "Fix típico": "< 35 s en frío",
-      "Interfaz": "UART hacia el MCU"
+      "Módulo GPS": "ATGM336H",
+      "Protocolo": "NMEA 0183",
+      "Baudrate": "9600",
+      "Interfaz": "UART (TX=GPIO0, RX=GPIO1)",
+      "Datos": "Lat, Lng, Alt, Satélites"
     },
     "mesh_name": "pcb_gps_layer",
     "stack": 7,
@@ -38,13 +38,14 @@
     "nombre": "Comunicación LoRa",
     "categoria": "PCB",
     "modelo": "Ai-Thinker RA-02 (Semtech SX1278)",
-    "descripcion": "Enlace de telemetría de largo alcance en 433 MHz. Mantiene el contacto durante el vuelo y sirve de baliza tras el aterrizaje.",
+    "descripcion": "Enlace de telemetría de largo alcance en 433 MHz. Mantiene el contacto durante el vuelo y sirve de baliza tras el aterrizaje. SyncWord 0xA5 y CRC habilitado.",
     "specs": {
       "Módulo": "RA-02 (SX1278)",
       "Banda": "433 MHz",
+      "SyncWord": "0xA5",
+      "CRC": "Habilitado",
       "Alcance esperado": "≈5 km línea de vista",
-      "Antena": "Monopolo λ/4 con plano de tierra",
-      "Interfaz": "SPI + IRQ"
+      "Interfaz": "SPI1 (CS=GPIO3, RST=GPIO2, DIO0=GPIO6)"
     },
     "mesh_name": "pcb_lora_layer",
     "stack": 6,
@@ -54,15 +55,14 @@
     "id": "pcb-sensores",
     "nombre": "Módulo de sensores",
     "categoria": "PCB",
-    "modelo": "PCB roja de sensado inercial y ambiental",
-    "descripcion": "PCB roja con sensores del perfil atmosférico y de actitud de la cápsula. Cada chip puede sustituirse por su modelo CAD cuando exista.",
+    "modelo": "PCB de sensado inercial y ambiental",
+    "descripcion": "PCB con los sensores del perfil atmosférico y de actitud de la cápsula. Todos conectados por bus I²C (SDA=GPIO4, SCL=GPIO5).",
     "specs": {
-      "Magnetómetro": "AK8975",
-      "IMU": "MPU6050",
-      "Temperatura": "TMP102",
-      "Presión / humedad": "BME280",
-      "Estado": "LED RGB",
-      "Bus": "I²C compartido"
+      "IMU": "MPU-6050 (acelerómetro ±2g, giroscopio ±250°/s, temp. interna)",
+      "Barómetro": "BMP280 (temperatura, presión, altitud barométrica)",
+      "Magnetómetro": "QMC5883P (3 ejes, rango ±8 Gauss)",
+      "Bus": "I²C compartido (SDA=4, SCL=5)",
+      "Direcciones": "MPU=0x68, BMP=0x76, QMC=0x0D"
     },
     "mesh_name": "pcb_sensors_layer",
     "stack": 5,
@@ -72,14 +72,15 @@
     "id": "pcb-microcontrolador",
     "nombre": "Microcontrolador",
     "categoria": "PCB",
-    "modelo": "PCB verde de control (MCU por confirmar)",
-    "descripcion": "Cerebro del pico satélite: muestrea sensores, arma paquetes de telemetría, los guarda en microSD y los entrega al módulo LoRa.",
+    "modelo": "Waveshare RP2040-Zero (ARM Cortex-M0+ dual-core)",
+    "descripcion": "Cerebro del picosatélite: muestrea sensores, arma paquetes de telemetría CSV, los guarda en microSD y los entrega al módulo LoRa. Ciclo de 1 segundo.",
     "specs": {
-      "MCU": "Por confirmar",
-      "Memoria": "EEPROM I²C",
-      "Almacenamiento": "Socket microSD",
-      "Puertos": "USB-Serial y USB-OTG",
-      "Comunicación": "I²C / SPI / UART"
+      "MCU": "RP2040 (ARM Cortex-M0+ dual-core, 133 MHz)",
+      "Flash": "2 MB",
+      "RAM": "264 KB",
+      "Almacenamiento": "microSD vía SPI1 (CS=GPIO13)",
+      "Comunicación": "I²C, SPI1, UART",
+      "Identificador": "SAT7X"
     },
     "mesh_name": "pcb_mcu_layer",
     "stack": 4,
@@ -98,43 +99,23 @@
       "Función": "Armado / seguro en tierra"
     },
     "mesh_name": "power_switch",
-    "stack": 4,
+    "stack": 3,
     "color": "#FFB020"
   },
-
   {
-    "id": "pcb-vision",
-    "nombre": "Módulo de visión",
-    "categoria": "PCB",
-    "modelo": "FPGA Xilinx Spartan-6 XC6SLX6 + SDRAM",
-    "descripcion": "Captura y almacena imagen con la FPGA como controlador de cámara y memoria externa como buffer de cuadro.",
+    "id": "bateria",
+    "nombre": "Batería y regulador",
+    "categoria": "Energía",
+    "modelo": "LiPo 3.7V 800mAh + XL6009 Step-Up",
+    "descripcion": "Alimentación principal del sistema. La batería LiPo entrega 3.7V y el regulador XL6009 eleva a 5V para los módulos que lo requieren.",
     "specs": {
-      "FPGA": "Spartan-6 XC6SLX6",
-      "Memoria": "SDRAM externa",
-      "Cámara": "OV7670 (640×480)",
-      "Función": "Buffer de cuadro y captura",
-      "Interfaz": "Bus paralelo + SCCB"
+      "Batería": "LiPo 3.7V 800mAh",
+      "Regulador": "XL6009 Step-Up (3.7V → 5V)",
+      "Autonomía estimada": "≈2 h en transmisión"
     },
-    "mesh_name": "pcb_vision_layer",
+    "mesh_name": "battery_group",
     "stack": 2,
-    "color": "#3B2050"
-  },
-  {
-    "id": "camara",
-    "nombre": "Cámara fotográfica",
-    "categoria": "Carga útil",
-    "modelo": "OV7670 con lente M12",
-    "descripcion": "Pieza independiente montada en la base, apuntando hacia abajo por una ventana de la carcasa para fotografiar el terreno durante el descenso.",
-    "specs": {
-      "Sensor": "OV7670",
-      "Resolución": "640 × 480",
-      "Lente": "M12, campo ≈70°",
-      "Orientación": "Nadir (hacia el suelo)",
-      "Control": "FPGA vía SCCB"
-    },
-    "mesh_name": "camera_body",
-    "stack": 1,
-    "color": "#0E1726"
+    "color": "#4A90D9"
   },
   {
     "id": "estructura",
@@ -149,7 +130,7 @@
       "Función": "Soporte, alineación y blindaje"
     },
     "mesh_name": "structure_group",
-    "stack": 0,
+    "stack": 1,
     "color": "#5B6C88"
   }
 ]

@@ -1,6 +1,6 @@
 {
   "nombre": "Nanonauta",
-  "objetivo": "Levantar un perfil atmosférico vertical (presión, temperatura, humedad) durante ascenso y descenso, validar el enlace LoRa de largo alcance y recuperar la cápsula intacta.",
+  "objetivo": "Levantar un perfil atmosférico vertical (presión, temperatura, altitud barométrica) y de orientación (aceleración, giroscopio, campo magnético) durante ascenso y descenso, validar el enlace LoRa de largo alcance y recuperar la cápsula intacta.",
   "fecha_lanzamiento": "2026-07-25T15:40:00.000Z",
   "altitud_objetivo_m": 1200,
   "componentes": [
@@ -10,8 +10,6 @@
     "interruptor",
     "pcb-sensores",
     "pcb-lora",
-    "pcb-vision",
-    "camara",
     "estructura"
   ],
   "sitio_lanzamiento": {
@@ -34,20 +32,19 @@
     {
       "grupo": "Cómputo y almacenamiento",
       "items": [
-        ["MCU", "Por confirmar"],
-        ["Memoria", "EEPROM I²C + socket microSD"],
-        ["Puertos", "USB-Serial, USB-OTG, bus I²C/SPI"],
-        ["Visión", "FPGA Spartan-6 XC6SLX6 + SDRAM"]
+        ["MCU", "Waveshare RP2040-Zero (ARM Cortex-M0+ dual-core)"],
+        ["Almacenamiento", "microSD vía SPI1"],
+        ["Puertos", "USB-Serial, bus I²C, SPI1, UART"]
       ]
     },
     {
       "grupo": "Sensado",
       "items": [
-        ["Inercial", "MPU6050 (6 ejes)"],
-        ["Magnetómetro", "AK8975"],
-        ["Temperatura", "TMP102"],
-        ["Presión / humedad", "BME280"],
-        ["GPS", "Quectel L70"]
+        ["Inercial", "MPU-6050 (acelerómetro ±2g + giroscopio ±250°/s)"],
+        ["Magnetómetro", "QMC5883P (3 ejes, rango ±8 Gauss)"],
+        ["Temperatura", "MPU-6050 (interna) + BMP280"],
+        ["Presión / altitud", "BMP280"],
+        ["GPS", "ATGM336H (UART 9600 baud)"]
       ]
     },
     {
@@ -56,6 +53,8 @@
         ["Telemetría", "LoRa RA-02 (SX1278), 433 MHz"],
         ["Cadencia", "1 paquete/s"],
         ["Alcance esperado", "≈5 km línea de vista"],
+        ["Batería", "LiPo 3.7V 800mAh"],
+        ["Regulador", "XL6009 Step-Up (3.7V → 5V)"],
         ["Autonomía estimada", "≈2 h en transmisión"]
       ]
     }
