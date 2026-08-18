@@ -30,7 +30,7 @@ export function Hero({ missionName, objective, launchDate, site, subsystemCount,
           <div className="hero__meta">
             <span className="badge badge--amber">Lanzamiento {launchDate} UTC</span>
             <span className="badge">{site}</span>
-            <span className="badge">{subsystemCount} subsistemas</span>
+            {/* <span className="badge">{subsystemCount} subsistemas</span> */}
           </div>
 
           <div className="btn-row">
@@ -42,10 +42,10 @@ export function Hero({ missionName, objective, launchDate, site, subsystemCount,
               <ChartIcon />
               Ver telemetría
             </Link>
-            <Link className="btn" href="/recuperacion">
+            {/* <Link className="btn" href="/recuperacion">
               <PinIcon />
               Punto de aterrizaje
-            </Link>
+            </Link> */}{/* Oculto temporalmente */}
           </div>
 
           <div className="hero__stats">
