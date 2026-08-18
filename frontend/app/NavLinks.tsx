@@ -7,7 +7,7 @@ const links = [
   { href: "/", label: "Inicio", num: "01" },
   { href: "/modelo-3d", label: "Modelo 3D", num: "02" },
   { href: "/dashboard", label: "Telemetría", num: "03" },
-  { href: "/recuperacion", label: "Recuperación", num: "04" },
+  // { href: "/recuperacion", label: "Recuperación", num: "04" }, // Oculto temporalmente
 ];
 
 export function NavLinks() {
