@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { TelemetryChart, SensorFilterBar, ExportButton, DataTable } from "@/components/dashboard";
+import { TelemetryChart, SensorFilterBar, ExportButton, DataTable, OrientationViewerLoader } from "@/components/dashboard";
 import type { Phase, DataTableColumn } from "@/components/dashboard";
 import { DataClient } from "@/lib/api";
 import type { TelemetryReading } from "@/lib/api";
@@ -36,6 +36,11 @@ export default function DashboardPage() {
     { label: "RSSI mínimo", value: minRssi !== null ? minRssi.toFixed(1) : "—", unit: "dBm" },
     { label: "Paquetes", value: packetCount > 0 ? String(packetCount) : "—", unit: "", tone: "green" },
   ];
+
+  /* ─── Última lectura para el visor 3D ─── */
+  const lastReading = readings.length > 0 ? readings[readings.length - 1] : null;
+  const lastGyro = lastReading ? lastReading.giroscopio : null;
+  const lastAccel = lastReading ? lastReading.acelerometro : null;
 
   /* ─── Filas de la tabla ─── */
   const tableRows = readings.map((r) => ({
@@ -96,6 +101,11 @@ export default function DashboardPage() {
           <TelemetryChart id="plotImu" title="Inercial" hint="MPU-6050 · |a| y |ω|" />
           <TelemetryChart id="plotMag" title="Magnetómetro" hint="QMC5883P · campo magnético XYZ" />
           <TelemetryChart id="plotTrajectory" title="Trayectoria 3D" hint="GPS ATGM336H · lat/lng/altitud, arrastra para girar" wide tall />
+        </div>
+
+        {/* Visor 3D de orientación */}
+        <div style={{ marginTop: "var(--space-6)" }}>
+          <OrientationViewerLoader gyro={lastGyro} accel={lastAccel} />
         </div>
 
         {/* Tabla de datos crudos */}

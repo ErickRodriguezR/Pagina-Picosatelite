@@ -9,3 +9,6 @@ export type { ExportButtonProps } from "./ExportButton";
 
 export { DataTable } from "./DataTable";
 export type { DataTableColumn, DataTableProps } from "./DataTable";
+
+export { OrientationViewerLoader } from "./OrientationViewerLoader";
+export type { OrientationViewerProps } from "./OrientationViewer";
