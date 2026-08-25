@@ -1,3 +1,6 @@
+"use client";
+
+import { useState, useCallback } from "react";
 import { ExplodeControls } from "@/components/model3d";
 import { SatelliteModelLoader } from "@/components/model3d/SatelliteModelLoader";
 import type { LayerSpec } from "@/components/model3d";
@@ -8,6 +11,58 @@ import type { LayerSpec } from "@/components/model3d";
  * y la lista de capas/tarjeta de detalle.
  */
 export default function Modelo3DPage() {
+  // Estado compartido entre visor 3D y controles
+  const [shellOpen, setShellOpen] = useState(false);
+  const [explode, setExplode] = useState(0);
+  const [autoRotate, setAutoRotate] = useState(false);
+  const [selectedId, setSelectedId] = useState<string | null>(null);
+  const [hoveredId, setHoveredId] = useState<string | null>(null);
+
+  // El ID activo es el seleccionado o, mientras no haya selección, el que tiene hover
+  const activeId = selectedId ?? hoveredId;
+
+  // Handlers para ExplodeControls
+  const handleShellToggle = useCallback((open: boolean) => {
+    setShellOpen(open);
+  }, []);
+
+  const handleExplodeChange = useCallback((value: number) => {
+    setExplode(value);
+  }, []);
+
+  const handleAutoRotateToggle = useCallback((on: boolean) => {
+    setAutoRotate(on);
+  }, []);
+
+  const handleResetView = useCallback(() => {
+    setShellOpen(false);
+    setExplode(0);
+    setAutoRotate(false);
+    setSelectedId(null);
+  }, []);
+
+  const handlePlaySequence = useCallback(() => {
+    setShellOpen(true);
+    setExplode(1);
+  }, []);
+
+  // Handlers para SatelliteModel
+  const handleHover = useCallback((id: string | null) => {
+    setHoveredId(id);
+  }, []);
+
+  const handleSelect = useCallback((id: string | null) => {
+    setSelectedId(id);
+  }, []);
+
+  // Handler para la lista de componentes (sidebar)
+  const handleComponentClick = useCallback((id: string) => {
+    setSelectedId((prev) => (prev === id ? null : id));
+  }, []);
+
+  // Datos del componente activo para la tarjeta de detalle
+  const activeLayer = activeId ? LAYERS.find((l) => l.id === activeId) : null;
+
   return (
     <section aria-labelledby="modelTitle">
       <div className="container section section--tight">
@@ -21,23 +76,28 @@ export default function Modelo3DPage() {
             componente aparece su ficha con el modelo que usamos. Los números
             marcan los puntos críticos del ensamble.
           </p>
-          <div className="notice" role="note">
-            <InfoIcon />
-            <p>
-              Geometría <b>placeholder</b> hecha con primitivas de Three.js: la
-              interacción (hover, ficha, apertura y explosión) ya es la
-              definitiva. Cuando exista el <span className="mono">.glb</span>{" "}
-              real modelado en CAD, se reemplazan las mallas sin tocar la lógica.
-            </p>
-          </div>
         </div>
 
         {/* Layout principal: visor + sidebar */}
         <div className="model-layout">
           {/* Columna izquierda: stage + controles */}
           <div>
-            <SatelliteModelLoader layers={LAYERS} />
-            <ExplodeControls />
+            <SatelliteModelLoader
+              layers={LAYERS}
+              selectedId={activeId}
+              onHover={handleHover}
+              onSelect={handleSelect}
+              shellOpen={shellOpen}
+              explode={explode}
+              autoRotate={autoRotate}
+            />
+            <ExplodeControls
+              onShellToggle={handleShellToggle}
+              onExplodeChange={handleExplodeChange}
+              onAutoRotateToggle={handleAutoRotateToggle}
+              onResetView={handleResetView}
+              onPlaySequence={handlePlaySequence}
+            />
           </div>
 
           {/* Columna derecha: detalle + lista de componentes */}
@@ -46,21 +106,35 @@ export default function Modelo3DPage() {
             <div className="panel panel--corner detail-card" aria-live="polite">
               <div className="detail-card__head">
                 <div>
-                  <h3>Selecciona un componente</h3>
+                  <h3>{activeLayer ? activeLayer.nombre : "Selecciona un componente"}</h3>
                   <p className="detail-card__model">
-                    {LAYERS.length} capas · componentes señalados
+                    {activeLayer
+                      ? activeLayer.modelo
+                      : `${LAYERS.length} capas · componentes señalados`}
                   </p>
                 </div>
-                <span className="badge">ensamble</span>
+                <span className="badge">
+                  {activeLayer ? activeLayer.categoria : "ensamble"}
+                </span>
               </div>
-              <p>
-                Pasa el cursor por el modelo o usa la lista de abajo para ver la
-                ficha técnica de cada pieza.
-              </p>
-              <table className="kv">
-                <tbody />
-              </table>
-              <div className="chip-row" />
+              {!activeLayer && (
+                <p>
+                  Pasa el cursor por el modelo o usa la lista de abajo para ver la
+                  ficha técnica de cada pieza.
+                </p>
+              )}
+              {activeLayer?.specs && (
+                <table className="kv">
+                  <tbody>
+                    {Object.entries(activeLayer.specs).map(([key, value]) => (
+                      <tr key={key}>
+                        <th>{key}</th>
+                        <td>{value}</td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              )}
             </div>
 
             {/* Lista de capas y componentes */}
@@ -76,7 +150,8 @@ export default function Modelo3DPage() {
                     className="component-item"
                     type="button"
                     data-component={layer.id}
-                    aria-pressed="false"
+                    aria-pressed={activeId === layer.id}
+                    onClick={() => handleComponentClick(layer.id)}
                   >
                     <span
                       className="component-item__swatch"
@@ -99,27 +174,16 @@ export default function Modelo3DPage() {
   );
 }
 
-/* ─── Datos estáticos de capas (se moverán a lib/api/mock) ─── */
+/* ─── Datos estáticos de capas ─── */
 
 const LAYERS: LayerSpec[] = [
-  { id: "paracaidas", nombre: "Paracaídas", modelo: "Domo hemisférico de nylon ripstop, Ø450 mm", categoria: "Recuperación", color: "#E7ECF2" },
+  { id: "tapadera-sup", nombre: "Tapadera superior", modelo: "Tapa cilíndrica impresa en PETG", categoria: "Carcasa", color: "#E7ECF2" },
+  { id: "tapadera-inf", nombre: "Tapadera inferior", modelo: "Tapa cilíndrica impresa en PETG", categoria: "Carcasa", color: "#E7ECF2" },
+  { id: "base-paracaidas", nombre: "Base del paracaídas", modelo: "Soporte cónico impreso en PETG", categoria: "Recuperación", color: "#5B6C88" },
+  { id: "cilindro", nombre: "Cilindro principal", modelo: "Cuerpo cilíndrico impreso en PETG", categoria: "Carcasa", color: "#2A3B57" },
   { id: "pcb-gps-transmisor", nombre: "GPS y transmisor", modelo: "Quectel L70 + etapa TX", categoria: "PCB", color: "#1F6F4A" },
   { id: "pcb-lora", nombre: "Comunicación LoRa", modelo: "Ai-Thinker RA-02 (SX1278)", categoria: "PCB", color: "#16304F" },
   { id: "pcb-sensores", nombre: "Módulo de sensores", modelo: "PCB roja: AK8975, MPU6050, TMP102, BME280", categoria: "PCB", color: "#8E2230" },
   { id: "pcb-microcontrolador", nombre: "Microcontrolador", modelo: "PCB verde de control (MCU por confirmar)", categoria: "PCB", color: "#1F7A44" },
-  { id: "interruptor", nombre: "Interruptor de encendido", modelo: "Interruptor deslizante lateral", categoria: "Control", color: "#FFB020" },
   { id: "pcb-vision", nombre: "Módulo de visión", modelo: "FPGA Spartan-6 XC6SLX6 + SDRAM", categoria: "PCB", color: "#3B2050" },
-  { id: "camara", nombre: "Cámara fotográfica", modelo: "OV7670 con lente M12", categoria: "Carga útil", color: "#0E1726" },
-  { id: "estructura", nombre: "Estructura en 3D", modelo: "Bastidor PETG + 4 varillas guía M3", categoria: "Mecánica", color: "#5B6C88" },
 ];
-
-/* ─── Íconos ─── */
-
-function InfoIcon() {
-  return (
-    <svg width="18" height="18" viewBox="0 0 18 18" fill="none" aria-hidden="true" style={{ flex: "none", marginTop: 2 }}>
-      <circle cx="9" cy="9" r="7.5" stroke="currentColor" />
-      <path d="M9 5.5v.5M9 8v4.5" stroke="currentColor" strokeLinecap="round" />
-    </svg>
-  );
-}
