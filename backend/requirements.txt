@@ -1,0 +1,6 @@
+# Dependencias Python del backend Flask
+# Instalar con:  pip install -r requirements.txt
+flask
+flask-cors
+psycopg2-binary
+python-dotenv

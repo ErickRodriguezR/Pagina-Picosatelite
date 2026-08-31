@@ -3,24 +3,18 @@
 import { useEffect, useState } from "react";
 import { TelemetryChart, SensorFilterBar, ExportButton, DataTable, OrientationViewerLoader } from "@/components/dashboard";
 import type { Phase, DataTableColumn } from "@/components/dashboard";
-import { DataClient } from "@/lib/api";
 import type { TelemetryReading } from "@/lib/api";
+import { useLiveTelemetry } from "@/lib/hooks/useLiveTelemetry";
 
 /**
  * Vista 03 — Telemetría (Dashboard)
- * Carga datos desde DataClient (mock o API real) y los muestra
- * en KPIs, gráficas y tabla de datos crudos.
+ * Carga datos en TIEMPO REAL desde el endpoint SSE del backend Flask.
+ * El hook useLiveTelemetry() gestiona la conexión SSE, la reconexión
+ * automática y el historial inicial.
  */
 export default function DashboardPage() {
-  const [readings, setReadings] = useState<TelemetryReading[]>([]);
-  const [loading, setLoading] = useState(true);
-
-  useEffect(() => {
-    DataClient.getTelemetry().then((data) => {
-      setReadings(data);
-      setLoading(false);
-    });
-  }, []);
+  const { readings, status } = useLiveTelemetry();
+  const loading = readings.length === 0 && status === "connecting";
 
   /* ─── KPIs calculados desde los datos ─── */
   const apogee = readings.length > 0 ? Math.max(...readings.map((r) => r.altitud_m)) : null;
@@ -78,6 +72,9 @@ export default function DashboardPage() {
           </p>
         </div>
 
+        {/* Indicador de estado en vivo */}
+        <LiveStatusBadge status={status} />
+
         {/* KPIs */}
         <div className="kpi-grid" aria-label="Indicadores del vuelo">
           {kpiCards.map((kpi) => (
@@ -88,7 +85,7 @@ export default function DashboardPage() {
         {/* Filtros */}
         <SensorFilterBar
           phases={PHASES}
-          summary={loading ? "Cargando…" : `${packetCount} paquetes recibidos`}
+          summary={loading ? "Conectando…" : `${packetCount} paquetes recibidos`}
           exportButton={<ExportButton onExport={handleExportPlaceholder} />}
         />
 
@@ -112,6 +109,39 @@ export default function DashboardPage() {
         <DataTable columns={TABLE_COLUMNS} rows={tableRows} />
       </div>
     </section>
+  );
+}
+
+/* ─── Indicador EN VIVO ────────────────────────────────────────────────────── */
+
+type LiveStatus = "connecting" | "live" | "reconnecting" | "mock";
+
+function LiveStatusBadge({ status }: { status: LiveStatus }) {
+  const configs: Record<LiveStatus, { dot: string; text: string; color: string }> = {
+    live:         { dot: "●", text: "EN VIVO",       color: "#22c55e" },
+    connecting:   { dot: "○", text: "Conectando…",   color: "#f59e0b" },
+    reconnecting: { dot: "○", text: "Reconectando…", color: "#ef4444" },
+    mock:         { dot: "◆", text: "Datos de demo", color: "#6b7280" },
+  };
+  const { dot, text, color } = configs[status];
+
+  return (
+    <div
+      style={{
+        display: "inline-flex",
+        alignItems: "center",
+        gap: "0.4rem",
+        marginBottom: "var(--space-4)",
+        fontSize: "0.85rem",
+        fontWeight: 600,
+        color,
+      }}
+      aria-live="polite"
+      aria-label={`Estado de conexión: ${text}`}
+    >
+      <span style={{ fontSize: "0.7rem" }}>{dot}</span>
+      {text}
+    </div>
   );
 }
 

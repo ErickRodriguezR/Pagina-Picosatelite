@@ -1,0 +1,10 @@
+# ignore app cache folder
+.cache/
+
+# variables de entorno con credenciales (NO subir a git)
+.env
+
+# bytecode Python
+__pycache__/
+*.pyc
+
