@@ -14,6 +14,7 @@ export default function Modelo3DPage() {
   // Estado compartido entre visor 3D y controles
   const [shellOpen, setShellOpen] = useState(false);
   const [explode, setExplode] = useState(0);
+  const [explodePerLayer, setExplodePerLayer] = useState<Record<string, number>>({});
   const [autoRotate, setAutoRotate] = useState(false);
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [hoveredId, setHoveredId] = useState<string | null>(null);
@@ -60,9 +61,6 @@ export default function Modelo3DPage() {
     setSelectedId((prev) => (prev === id ? null : id));
   }, []);
 
-  // Datos del componente activo para la tarjeta de detalle
-  const activeLayer = activeId ? LAYERS.find((l) => l.id === activeId) : null;
-
   return (
     <section aria-labelledby="modelTitle">
       <div className="container section section--tight">
@@ -84,7 +82,8 @@ export default function Modelo3DPage() {
           <div>
             <SatelliteModelLoader
               layers={LAYERS}
-              selectedId={activeId}
+              selectedId={selectedId}
+              hoveredId={hoveredId}
               onHover={handleHover}
               onSelect={handleSelect}
               shellOpen={shellOpen}
@@ -102,40 +101,7 @@ export default function Modelo3DPage() {
 
           {/* Columna derecha: detalle + lista de componentes */}
           <aside className="grid" style={{ gap: "var(--space-4)" }} aria-label="Componentes del ensamble">
-            {/* Tarjeta de detalle */}
-            <div className="panel panel--corner detail-card" aria-live="polite">
-              <div className="detail-card__head">
-                <div>
-                  <h3>{activeLayer ? activeLayer.nombre : "Selecciona un componente"}</h3>
-                  <p className="detail-card__model">
-                    {activeLayer
-                      ? activeLayer.modelo
-                      : `${LAYERS.length} capas · componentes señalados`}
-                  </p>
-                </div>
-                <span className="badge">
-                  {activeLayer ? activeLayer.categoria : "ensamble"}
-                </span>
-              </div>
-              {!activeLayer && (
-                <p>
-                  Pasa el cursor por el modelo o usa la lista de abajo para ver la
-                  ficha técnica de cada pieza.
-                </p>
-              )}
-              {activeLayer?.specs && (
-                <table className="kv">
-                  <tbody>
-                    {Object.entries(activeLayer.specs).map(([key, value]) => (
-                      <tr key={key}>
-                        <th>{key}</th>
-                        <td>{value}</td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-              )}
-            </div>
+
 
             {/* Lista de capas y componentes */}
             <div className="panel" style={{ padding: "var(--space-4)" }}>
@@ -152,6 +118,10 @@ export default function Modelo3DPage() {
                     data-component={layer.id}
                     aria-pressed={activeId === layer.id}
                     onClick={() => handleComponentClick(layer.id)}
+                    onMouseEnter={() => handleHover(layer.id)}
+                    onMouseLeave={() => handleHover(null)}
+                    onFocus={() => handleHover(layer.id)}
+                    onBlur={() => handleHover(null)}
                   >
                     <span
                       className="component-item__swatch"
@@ -175,15 +145,42 @@ export default function Modelo3DPage() {
 }
 
 /* ─── Datos estáticos de capas ─── */
+/*
+ * Lista de componentes derivada del Outliner de Blender.
+ * Estructura por PCB:
+ *   · brain   → 3D_pcbBase : RP2040-Zero, SD Reader
+ *   · Metrics → 3D_pcbMid  : BMP280, MPU6050, QMC5883P
+ *   · Top     → 3D_pcbTop  : ATGM336H (GPS), LoRa
+ * Más los componentes sueltos de la colección y estructura.
+ * El campo `modelo` coincide con el nombre del objeto en Blender.
+ */
 
 const LAYERS: LayerSpec[] = [
-  { id: "tapadera-sup", nombre: "Tapadera superior", modelo: "Tapa cilíndrica impresa en PETG", categoria: "Carcasa", color: "#E7ECF2" },
-  { id: "tapadera-inf", nombre: "Tapadera inferior", modelo: "Tapa cilíndrica impresa en PETG", categoria: "Carcasa", color: "#E7ECF2" },
-  { id: "base-paracaidas", nombre: "Base del paracaídas", modelo: "Soporte cónico impreso en PETG", categoria: "Recuperación", color: "#5B6C88" },
-  { id: "cilindro", nombre: "Cilindro principal", modelo: "Cuerpo cilíndrico impreso en PETG", categoria: "Carcasa", color: "#2A3B57" },
-  { id: "pcb-gps-transmisor", nombre: "GPS y transmisor", modelo: "Quectel L70 + etapa TX", categoria: "PCB", color: "#1F6F4A" },
-  { id: "pcb-lora", nombre: "Comunicación LoRa", modelo: "Ai-Thinker RA-02 (SX1278)", categoria: "PCB", color: "#16304F" },
-  { id: "pcb-sensores", nombre: "Módulo de sensores", modelo: "PCB roja: AK8975, MPU6050, TMP102, BME280", categoria: "PCB", color: "#8E2230" },
-  { id: "pcb-microcontrolador", nombre: "Microcontrolador", modelo: "PCB verde de control (MCU por confirmar)", categoria: "PCB", color: "#1F7A44" },
-  { id: "pcb-vision", nombre: "Módulo de visión", modelo: "FPGA Spartan-6 XC6SLX6 + SDRAM", categoria: "PCB", color: "#3B2050" },
+  /* ── Carcasa / estructura ── */
+  { id: "tapadera-sup", nombre: "Tapadera superior", modelo: "tapadera_sup.001", categoria: "Carcasa", color: "#E7ECF2" },
+  { id: "tapadera-inf", nombre: "Tapadera inferior", modelo: "tapadera_inf.001", categoria: "Carcasa", color: "#E7ECF2" },
+  { id: "base-paracaidas", nombre: "Base del paracaídas", modelo: "base_paracaidas.001", categoria: "Recuperación", color: "#5B6C88" },
+  { id: "cilindro", nombre: "Cilindro principal", modelo: "cilindro.001", categoria: "Carcasa", color: "#2A3B57" },
+  { id: "paracaidas", nombre: "Paracaídas", modelo: "Parachute+", categoria: "Recuperación", color: "#D8DEE8" },
+
+  /* ── PCB brain (3D_pcbBase) ── */
+  { id: "pcb-base", nombre: "PCB Base (brain)", modelo: "3D_pcbBase_2026-08-27", categoria: "PCB", color: "#1F7A44" },
+  { id: "rp2040-zero", nombre: "Microcontrolador RP2040-Zero", modelo: "RP2040-zero", categoria: "brain", color: "#2E9E5B" },
+  { id: "sd-reader", nombre: "Lector microSD", modelo: "SD Reader.001", categoria: "brain", color: "#3FB273" },
+
+  /* ── PCB Metrics (3D_pcbMid) ── */
+  { id: "pcb-mid", nombre: "PCB Metrics (sensores)", modelo: "3D_pcbMid_2026-08-27", categoria: "PCB", color: "#8E2230" },
+  { id: "bmp280", nombre: "Barómetro BMP280", modelo: "BMP280", categoria: "Metrics", color: "#A83244" },
+  { id: "mpu6050", nombre: "IMU MPU-6050", modelo: "MPU 6050", categoria: "Metrics", color: "#BF4256" },
+  { id: "qmc5883p", nombre: "Magnetómetro QMC5883P", modelo: "QMC5883P", categoria: "Metrics", color: "#D25668" },
+
+  /* ── PCB Top (3D_pcbTop) ── */
+  { id: "pcb-top", nombre: "PCB Top (comunicaciones)", modelo: "3D_pcbTop_2026-08-27", categoria: "PCB", color: "#16304F" },
+  { id: "atgm336h", nombre: "GPS ATGM336H", modelo: "ATGM336H", categoria: "Top", color: "#1F6F4A" },
+  { id: "lora", nombre: "Radio LoRa", modelo: "LoRa", categoria: "Top", color: "#274B7A" },
+
+  /* ── Energía y periféricos ── */
+  { id: "bateria", nombre: "Batería", modelo: "Batery", categoria: "Energía", color: "#4A90D9" },
+  { id: "xl6009", nombre: "Regulador XL6009", modelo: "XL6009", categoria: "Energía", color: "#F0A020" },
+  { id: "sg90-servo", nombre: "Servo SG90", modelo: "SG90-Servo", categoria: "Actuadores", color: "#7A6CD9" },
 ];

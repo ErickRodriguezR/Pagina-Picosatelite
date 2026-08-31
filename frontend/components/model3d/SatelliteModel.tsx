@@ -19,10 +19,13 @@ export interface LayerSpec {
 export interface SatelliteModelProps {
   layers: LayerSpec[];
   selectedId?: string | null;
+  hoveredId?: string | null;
   onHover?: (id: string | null) => void;
   onSelect?: (id: string | null) => void;
   shellOpen?: boolean;
   explode?: number;
+  /** Explosión individual por capa (id de capa → 0-1). Tiene prioridad sobre `explode` global para esa pieza. */
+  explodePerLayer?: Record<string, number>;
   autoRotate?: boolean;
 }
 
@@ -64,10 +67,37 @@ const SHELL_DIRECTIONS: Record<string, [number, number, number]> = {
  * Abre la consola del navegador (F12) para ver los nombres reales impresos.
  */
 const MESH_TO_LAYER: Record<string, string> = {
+  /* Carcasa / estructura (los nombres del GLB suelen incluir el sufijo .001) */
   tapadera_sup: "tapadera-sup",
+  "tapadera_sup.001": "tapadera-sup",
   tapadera_inf: "tapadera-inf",
+  "tapadera_inf.001": "tapadera-inf",
   base_paracaidas: "base-paracaidas",
+  "base_paracaidas.001": "base-paracaidas",
   cilindro: "cilindro",
+  "cilindro.001": "cilindro",
+  "Parachute+": "paracaidas",
+
+  /* PCB brain (3D_pcbBase) */
+  "3D_pcbBase_2026-08-27": "pcb-base",
+  "RP2040-zero": "rp2040-zero",
+  "SD Reader.001": "sd-reader",
+
+  /* PCB Metrics (3D_pcbMid) */
+  "3D_pcbMid_2026-08-27": "pcb-mid",
+  BMP280: "bmp280",
+  "MPU 6050": "mpu6050",
+  QMC5883P: "qmc5883p",
+
+  /* PCB Top (3D_pcbTop) */
+  "3D_pcbTop_2026-08-27": "pcb-top",
+  ATGM336H: "atgm336h",
+  LoRa: "lora",
+
+  /* Energía y periféricos */
+  Batery: "bateria",
+  XL6009: "xl6009",
+  "SG90-Servo": "sg90-servo",
 };
 
 /* ─── Componente interno: Escena 3D con el modelo GLB ─── */
@@ -79,13 +109,21 @@ interface SceneProps {
   onSelect?: (id: string | null) => void;
   shellOpen?: boolean;
   explode?: number;
+  explodePerLayer?: Record<string, number>;
+  hoveredId?: string | null;
   onPointerData?: (data: { layerId: string; x: number; y: number } | null) => void;
 }
 
-function Scene({ layers, selectedId, onHover, onSelect, shellOpen, explode = 0, onPointerData }: SceneProps) {
+function Scene({ layers, selectedId, hoveredId: externalHoveredId, onHover, onSelect, shellOpen, explode = 0, explodePerLayer, onPointerData }: SceneProps) {
   const { scene } = useGLTF(MODEL_PATH);
   const groupRef = useRef<THREE.Group>(null);
   const { gl } = useThree();
+
+  // Hover manejado dentro de la escena para un resalte inmediato,
+  // independiente del estado de la página. Se combina con el hover
+  // externo (p. ej. al pasar el cursor por la lista lateral).
+  const [internalHoveredId, setInternalHoveredId] = useState<string | null>(null);
+  const hoveredId = internalHoveredId ?? externalHoveredId ?? null;
 
   // Guardar posiciones originales de cada mesh al cargar
   const originalPositions = useRef<Map<string, THREE.Vector3>>(new Map());
@@ -133,7 +171,9 @@ function Scene({ layers, selectedId, onHover, onSelect, shellOpen, explode = 0, 
     }
   }, [meshList]);
 
-  // Aplicar colores según LAYERS y resaltar selección
+  // Aplicar colores según LAYERS y resaltar selección / hover.
+  // El resalte usa el material emissive, así que se mantiene igual
+  // aunque se haga zoom o se gire la cámara.
   useEffect(() => {
     meshList.forEach((mesh) => {
       const layerId = MESH_TO_LAYER[mesh.name];
@@ -151,17 +191,20 @@ function Scene({ layers, selectedId, onHover, onSelect, shellOpen, explode = 0, 
           mat.metalness = 0.1;
         }
 
-        // Highlight de selección
-        if (layerId === selectedId) {
+        // Resalte: selección tiene prioridad (más fuerte), luego hover (sutil)
+        if (layerId && layerId === selectedId) {
           mat.emissive = new THREE.Color("#FFB020");
-          mat.emissiveIntensity = 0.4;
+          mat.emissiveIntensity = 0.55;
+        } else if (layerId && layerId === hoveredId) {
+          mat.emissive = new THREE.Color("#FFCC66");
+          mat.emissiveIntensity = 0.28;
         } else {
           mat.emissive = new THREE.Color("#000000");
           mat.emissiveIntensity = 0;
         }
       }
     });
-  }, [meshList, layers, selectedId]);
+  }, [meshList, layers, selectedId, hoveredId]);
 
   // Aplicar posiciones: original + shell offset + explode offset
   useEffect(() => {
@@ -184,17 +227,22 @@ function Scene({ layers, selectedId, onHover, onSelect, shellOpen, explode = 0, 
         }
       }
 
-      // Sumar offset de explosión
-      if (explode > 0) {
+      // Sumar offset de explosión (per-layer tiene prioridad sobre global)
+      const layerId = MESH_TO_LAYER[name];
+      const layerExplode = (explodePerLayer && layerId && layerId in explodePerLayer)
+        ? explodePerLayer[layerId]
+        : explode;
+
+      if (layerExplode > 0) {
         const dir = EXPLODE_DIRECTIONS[name];
         if (dir) {
-          mesh.position.x += dir[0] * EXPLODE_DISTANCE * explode;
-          mesh.position.y += dir[1] * EXPLODE_DISTANCE * explode;
-          mesh.position.z += dir[2] * EXPLODE_DISTANCE * explode;
+          mesh.position.x += dir[0] * EXPLODE_DISTANCE * layerExplode;
+          mesh.position.y += dir[1] * EXPLODE_DISTANCE * layerExplode;
+          mesh.position.z += dir[2] * EXPLODE_DISTANCE * layerExplode;
         }
       }
     });
-  }, [meshList, shellOpen, explode]);
+  }, [meshList, shellOpen, explode, explodePerLayer]);
 
   // Eventos de interacción
   const handlePointerOver = useCallback(
@@ -203,6 +251,7 @@ function Scene({ layers, selectedId, onHover, onSelect, shellOpen, explode = 0, 
       const name = e.object.name;
       const layerId = MESH_TO_LAYER[name] ?? null;
       if (layerId) {
+        setInternalHoveredId(layerId);
         onHover?.(layerId);
         gl.domElement.style.cursor = "pointer";
         const rect = gl.domElement.getBoundingClientRect();
@@ -215,6 +264,7 @@ function Scene({ layers, selectedId, onHover, onSelect, shellOpen, explode = 0, 
   const handlePointerOut = useCallback(
     (e: ThreeEvent<PointerEvent>) => {
       e.stopPropagation();
+      setInternalHoveredId(null);
       onHover?.(null);
       gl.domElement.style.cursor = "grab";
       onPointerData?.(null);
@@ -276,10 +326,12 @@ function PlaceholderScene() {
 export function SatelliteModel({
   layers,
   selectedId,
+  hoveredId,
   onHover,
   onSelect,
   shellOpen = false,
   explode = 0,
+  explodePerLayer,
   autoRotate = false,
 }: SatelliteModelProps) {
   const stageRef = useRef<HTMLDivElement>(null);
@@ -333,10 +385,12 @@ export function SatelliteModel({
             <Scene
               layers={layers}
               selectedId={selectedId}
+              hoveredId={hoveredId}
               onHover={onHover}
               onSelect={onSelect}
               shellOpen={shellOpen}
               explode={explode}
+              explodePerLayer={explodePerLayer}
               onPointerData={handlePointerData}
             />
           </Bounds>
