@@ -12,3 +12,5 @@ export {
   haversineDistance,
   offsetPoint,
 } from "./geo";
+
+export { exportTelemetryCsv } from "./exportCsv";
