@@ -1,6 +1,0 @@
-# Dependencias para nanonauta/python/
-# Instalar con:  pip install -r requirements.txt
-psycopg2-binary
-python-dotenv
-flask
-flask-cors

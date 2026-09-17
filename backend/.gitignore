@@ -1,6 +1,0 @@
-# .env del backend Flask
-.env
-
-# bytecode Python
-__pycache__/
-*.pyc
