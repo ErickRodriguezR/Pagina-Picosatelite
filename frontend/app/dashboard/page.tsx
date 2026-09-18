@@ -8,6 +8,7 @@ import {
   DataTable,
   OrientationViewerLoader,
 } from "@/components/dashboard";
+import { BatteryRocket, TelemetryModeBadge } from "@/components/ui";
 import type { Phase, DataTableColumn } from "@/components/dashboard";
 import type { TelemetryReading } from "@/lib/api";
 import { useLiveTelemetry } from "@/lib/hooks/useLiveTelemetry";
@@ -166,7 +167,11 @@ export default function DashboardPage() {
         </div>
 
         {/* ── Indicador EN VIVO ── */}
-        <LiveStatusBadge status={status} />
+        <div style={{ display: "flex", alignItems: "center", gap: "var(--space-3)", flexWrap: "wrap", marginBottom: "var(--space-4)" }}>
+          <LiveStatusBadge status={status} />
+          <TelemetryModeBadge mode={status === "mock" ? 0 : 1} />
+          {last && <BatteryRocket percentage={(last.voltage_v / 7.4) * 100} />}
+        </div>
 
         {/* ── 10 campos TR-02 obligatorios ── */}
         {last ? (

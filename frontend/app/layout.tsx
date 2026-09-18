@@ -3,6 +3,7 @@ import { Space_Grotesk, Inter, JetBrains_Mono } from "next/font/google";
 import Link from "next/link";
 import "./globals.css";
 import { NavLinks } from "./NavLinks";
+import { HeaderIndicators } from "@/components/ui";
 
 const spaceGrotesk = Space_Grotesk({
   variable: "--font-display",
@@ -59,10 +60,7 @@ export default function RootLayout({
 
             <NavLinks />
 
-            <span className="status-pill">
-              <span className="status-pill__dot" aria-hidden="true" />
-              <span>Sin datos</span>
-            </span>
+            <HeaderIndicators />
           </div>
         </header>
 

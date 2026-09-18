@@ -18,3 +18,9 @@ export type { KvTableProps } from "./KvTable";
 
 export { Eyebrow } from "./Eyebrow";
 export type { EyebrowProps } from "./Eyebrow";
+
+export { BatteryRocket } from "./BatteryRocket";
+
+export { TelemetryModeBadge } from "./TelemetryModeBadge";
+
+export { HeaderIndicators } from "./HeaderIndicators";

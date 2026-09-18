@@ -967,3 +967,64 @@ table.data tbody tr:hover td { background: rgba(42, 59, 87, 0.3); }
 .tooltip3d dl { display: grid; grid-template-columns: auto 1fr; gap: 2px var(--space-2); margin: 0; font-size: 0.76rem; }
 .tooltip3d dt { color: var(--text-muted); }
 .tooltip3d dd { margin: 0; font-family: var(--font-mono); }
+
+/* ===========================================================================
+   BATTERY ROCKET — indicador de batería con SVG de cohete
+   =========================================================================== */
+.battery-rocket {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.4rem 0.75rem;
+  border-radius: var(--radius-sm);
+  background: var(--bg-panel);
+  border: 1px solid var(--line-blueprint);
+  font-size: 0.85rem;
+  transition: border-color 200ms ease;
+}
+.battery-rocket__icon { width: 28px; height: 28px; }
+.battery-rocket__body { fill: var(--accent-green); }
+.battery-rocket__flame { fill: var(--accent-amber); opacity: 0.7; }
+.battery-rocket__fin { fill: var(--text-muted); }
+.battery-rocket__window { fill: var(--bg-deep); stroke: var(--accent-amber); stroke-width: 0.8; }
+.battery-rocket__value { font-weight: 600; color: var(--text-primary); }
+
+.battery-rocket--healthy { border-color: var(--accent-green); }
+.battery-rocket--healthy .battery-rocket__body { fill: var(--accent-green); }
+.battery-rocket--healthy .battery-rocket__flame { fill: var(--accent-green); opacity: 0.5; }
+
+.battery-rocket--warning { border-color: var(--accent-amber); }
+.battery-rocket--warning .battery-rocket__body { fill: var(--accent-amber); }
+.battery-rocket--warning .battery-rocket__flame { fill: var(--accent-amber); opacity: 0.9; }
+
+.battery-rocket--critical { border-color: #ef4444; }
+.battery-rocket--critical .battery-rocket__body { fill: #ef4444; }
+.battery-rocket--critical .battery-rocket__flame { fill: #ef4444; opacity: 1; }
+
+/* ===========================================================================
+   TELEMETRY MODE BADGE — indicador de modo (simulación / tiempo real)
+   =========================================================================== */
+.telemetry-mode {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  padding: 0.35rem 0.65rem;
+  border-radius: var(--radius-sm);
+  font-size: 0.78rem;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  border: 1px solid;
+}
+.telemetry-mode__mark { font-size: 0.65rem; }
+.telemetry-mode__value { margin-right: 0.15rem; }
+
+.telemetry-mode--simulation {
+  color: var(--accent-amber);
+  border-color: rgba(255, 176, 32, 0.4);
+  background: rgba(255, 176, 32, 0.08);
+}
+.telemetry-mode--realtime {
+  color: var(--accent-green);
+  border-color: rgba(53, 208, 127, 0.4);
+  background: rgba(53, 208, 127, 0.08);
+}
