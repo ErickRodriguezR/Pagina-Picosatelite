@@ -30,8 +30,8 @@ export default function HomePage() {
           <div>
             <h2>El interior, capa por capa</h2>
             <p>
-              La cápsula se abre en el visor 3D: pasa el cursor sobre cada PCB,
-              sensor o módulo para ver el modelo exacto que usamos y su ficha
+              Pasa el cursor sobre cada PCB,
+              sensor, módulo o la misma carcasa para ver el modelo exacto que usamos y su ficha
               técnica.
             </p>
           </div>
@@ -49,11 +49,11 @@ export default function HomePage() {
 /* ─── Datos estáticos (se moverán a lib/api/mock cuando se cree esa capa) ─── */
 
 const MISSION_SHEET: [string, string][] = [
-  ["Identificador", "PS-01 / CANSAT"],
-  ["Lanzamiento", "2026-07-25 15:40:00 UTC"],
+  ["Identificador", "PS-01"],
+  ["Lanzamiento", "2026-09-25 15:40:00 UTC"],
   ["Sitio", "Uruapan Michoacán (ITSU)"],
-  ["Elevación del sitio", "2 500 m MSL"],
-  ["Altitud objetivo", "1 200 m AGL"],
+  ["Elevación del sitio", "17 m MSL"],
+  ["Altitud objetivo", "50 m AGL"],
   ["Apogeo registrado", "—"],
   ["Temperatura mínima", "—"],
   ["Aceleración pico", "—"],
@@ -66,10 +66,10 @@ const SPEC_GROUPS: SpecGroup[] = [
     title: "Cápsula",
     items: [
       ["Formato", "Tipo CanSat, cilíndrico"],
-      ["Diámetro / alto", "60 mm × 110 mm"],
-      ["Masa en vuelo", "350 g"],
-      ["Estructura", "Impresión 3D PETG + varillas guía"],
-      ["Recuperación", "Paracaídas de nylon, descenso ≈5 m/s"],
+      ["Diámetro / alto", "98 mm × 198 mm"],
+      ["Masa en vuelo", "380 g"],
+      ["Estructura", "Impresión 3D PETG + TPU"],
+      ["Recuperación", "Paracaídas de nylon, descenso < 7 m/s"],
     ],
   },
   {
@@ -90,15 +90,4 @@ const SPEC_GROUPS: SpecGroup[] = [
       ["GPS", "ATGM336H (UART 9600 baud)"],
     ],
   },
-  {
-    title: "Enlace y energía",
-    items: [
-      ["Telemetría", "LoRa RA-02 (SX1278), 433 MHz"],
-      ["Cadencia", "1 paquete/s"],
-      ["Alcance esperado", "≈5 km línea de vista"],
-      ["Autonomía estimada", "≈2 h en transmisión"],
-    ],
-  },
 ];
-
-

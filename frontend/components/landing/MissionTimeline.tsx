@@ -14,25 +14,25 @@ const PHASES: TimelinePhase[] = [
     key: "integracion",
     label: "Integración",
     description:
-      "Ensamblaje de subsistemas, calibración de sensores, verificación de continuidad y prueba de comunicaciones en tierra.",
+      "Calibración de sensores, prueba de comunicaciones en tierra y encapsulacion del tripulante simulado.",
   },
   {
     key: "ascenso",
     label: "Ascenso",
     description:
-      "Lanzamiento asistido por cohete o globo. Adquisición de telemetría a 1 Hz. BMP280 registra presión decreciente, GPS fija posición.",
+      "Lanzamiento asistido por Dron. Adquisición de telemetría a 1 Hz.",
   },
   {
     key: "apogeo",
     label: "Apogeo",
     description:
-      "Detección de apogeo. Activación del sistema de despliegue. Inicio de descenso controlado.",
+      "Detección de apogeo. El dron suelta el Satelite e inicia de descenso controlado a una velocidad de < 7 m/s.",
   },
   {
     key: "recuperacion",
     label: "Recuperación",
     description:
-      "Descenso, aterrizaje, localización por coordenadas en tiempo real.",
+      "Descenso, aterrizaje, verificación de que el tripulante simulado esté impecable.",
   },
 ];
 
