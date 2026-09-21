@@ -1,6 +1,9 @@
 export { TelemetryChart } from "./TelemetryChart";
 export type { TelemetryChartProps } from "./TelemetryChart";
 
+export { LiveTelemetryChart } from "./LiveTelemetryChart";
+export type { LiveTelemetryChartProps, PlotlyTrace, PlotlyLayout } from "./LiveTelemetryChart";
+
 export { AltitudeChart } from "./AltitudeChart";
 export type { AltitudeChartProps } from "./AltitudeChart";
 
