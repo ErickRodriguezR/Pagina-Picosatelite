@@ -2,7 +2,7 @@
 
 import { useRef, useMemo, useState, useCallback, useEffect } from "react";
 import { Canvas, useThree, type ThreeEvent } from "@react-three/fiber";
-import { OrbitControls, useGLTF, Center, Bounds } from "@react-three/drei";
+import { OrbitControls, useGLTF, Bounds } from "@react-three/drei";
 import * as THREE from "three";
 import { ComponentTooltip } from "./ComponentTooltip";
 import type { TooltipData } from "./ComponentTooltip";
@@ -27,6 +27,8 @@ export interface SatelliteModelProps {
   /** Explosión individual por capa (id de capa → 0-1). Tiene prioridad sobre `explode` global para esa pieza. */
   explodePerLayer?: Record<string, number>;
   autoRotate?: boolean;
+  /** Vista activa del ensamble: 0 carcasa, 1 electrónica, 2 protección, 3 todo. */
+  viewIndex?: number;
 }
 
 const MODEL_PATH = "/models/satellite-shell.glb";
@@ -39,6 +41,8 @@ const MODEL_PATH = "/models/satellite-shell.glb";
 const EXPLODE_DIRECTIONS: Record<string, [number, number, number]> = {
   tapadera_sup: [0, 1, 0],
   tapadera_inf: [0, -1, 0],
+  threaded_lid_top: [0, 1, 0],
+  threaded_lid_bottom: [0, -1, 0],
   base_paracaidas: [0, 1.5, 0],
   cilindro: [0, 0, 0],
 };
@@ -51,6 +55,8 @@ const SHELL_DISTANCE = 0.025;
 const SHELL_DIRECTIONS: Record<string, [number, number, number]> = {
   tapadera_sup: [0, 1, 0],
   tapadera_inf: [0, -1, 0],
+  threaded_lid_top: [0, 1, 0],
+  threaded_lid_bottom: [0, -1, 0],
   base_paracaidas: [0, 0, 0],
   cilindro: [0, 0, 0],
 };
@@ -72,11 +78,33 @@ const MESH_TO_LAYER: Record<string, string> = {
   "tapadera_sup.001": "tapadera-sup",
   tapadera_inf: "tapadera-inf",
   "tapadera_inf.001": "tapadera-inf",
+  threaded_lid_top: "tapadera-sup",
+  threaded_lid_bottom: "tapadera-inf",
   base_paracaidas: "base-paracaidas",
   "base_paracaidas.001": "base-paracaidas",
   cilindro: "cilindro",
   "cilindro.001": "cilindro",
   "Parachute+": "paracaidas",
+  parachute: "paracaidas",
+
+  /* Grupos y meshes del GLB exportado desde Blender */
+  pcb_base: "pcb-base",
+  pcb_mid: "pcb-mid",
+  pcb_top: "pcb-top",
+  rp2040_zero: "rp2040-zero",
+  sd_reader: "sd-reader",
+  battery: "bateria",
+  gps: "atgm336h",
+  lora: "lora",
+  mpu6050: "mpu6050",
+  qmc5883p: "qmc5883p",
+  xl6009: "xl6009",
+  bmp280: "bmp280",
+  egg: "egg",
+  cono_inf001: "egg-protection",
+  cono_superior001: "egg-protection",
+  parte_inferior001: "estructura",
+  parte_superior001: "estructura",
 
   /* PCB brain (3D_pcbBase) */
   "3D_pcbBase_2026-08-27": "pcb-base",
@@ -100,6 +128,40 @@ const MESH_TO_LAYER: Record<string, string> = {
   "SG90-Servo": "sg90-servo",
 };
 
+/* Las vistas parciales solo muestran objetos que cuelgan de estos Empty. */
+const VISIBLE_GROUPS_BY_VIEW: Record<number, Set<string> | null> = {
+  0: new Set(["VIEW_SHELL_PARACHUTE", "SHARED"]),
+  1: new Set(["VIEW_ELECTRONICS"]),
+  2: new Set(["VIEW_EGG_PROTECTION"]),
+  3: null,
+};
+
+function getOwningViewGroup(object: THREE.Object3D, scene: THREE.Object3D) {
+  let current: THREE.Object3D | null = object.parent;
+
+  while (current && current !== scene) {
+    if (current.name === "VIEW_SHELL_PARACHUTE" || current.name === "VIEW_ELECTRONICS" || current.name === "VIEW_EGG_PROTECTION" || current.name === "SHARED") {
+      return current.name;
+    }
+    current = current.parent;
+  }
+
+  return null;
+}
+
+function resolveLayerId(object: THREE.Object3D, scene?: THREE.Object3D) {
+  let current: THREE.Object3D | null = object;
+
+  while (current) {
+    const layerId = MESH_TO_LAYER[current.name];
+    if (layerId) return layerId;
+    if (scene && current === scene) break;
+    current = current.parent;
+  }
+
+  return null;
+}
+
 /* ─── Componente interno: Escena 3D con el modelo GLB ─── */
 
 interface SceneProps {
@@ -112,9 +174,10 @@ interface SceneProps {
   explodePerLayer?: Record<string, number>;
   hoveredId?: string | null;
   onPointerData?: (data: { layerId: string; x: number; y: number } | null) => void;
+  viewIndex: number;
 }
 
-function Scene({ layers, selectedId, hoveredId: externalHoveredId, onHover, onSelect, shellOpen, explode = 0, explodePerLayer, onPointerData }: SceneProps) {
+function Scene({ layers, selectedId, hoveredId: externalHoveredId, onHover, onSelect, shellOpen, explode = 0, explodePerLayer, onPointerData, viewIndex }: SceneProps) {
   const { scene } = useGLTF(MODEL_PATH);
   const groupRef = useRef<THREE.Group>(null);
   const { gl } = useThree();
@@ -135,14 +198,18 @@ function Scene({ layers, selectedId, hoveredId: externalHoveredId, onHover, onSe
       if ((child as THREE.Mesh).isMesh) {
         const mesh = child as THREE.Mesh;
         list.push(mesh);
-        // Guardar posición original si no la tenemos
-        if (!originalPositions.current.has(mesh.name)) {
-          originalPositions.current.set(mesh.name, mesh.position.clone());
-        }
       }
     });
     return list;
   }, [scene]);
+
+  useEffect(() => {
+    meshList.forEach((mesh) => {
+      if (!originalPositions.current.has(mesh.uuid)) {
+        originalPositions.current.set(mesh.uuid, mesh.position.clone());
+      }
+    });
+  }, [meshList]);
 
   // Log de nombres de objetos para debug (solo una vez)
   useEffect(() => {
@@ -155,8 +222,8 @@ function Scene({ layers, selectedId, hoveredId: externalHoveredId, onHover, onSe
       Object.keys(MESH_TO_LAYER)
     );
     
-    const found = meshList.filter((m) => MESH_TO_LAYER[m.name]);
-    const notFound = meshList.filter((m) => !MESH_TO_LAYER[m.name]);
+    const found = meshList.filter((m) => resolveLayerId(m, scene));
+    const notFound = meshList.filter((m) => !resolveLayerId(m, scene));
     if (notFound.length > 0) {
       console.warn(
         "[SatelliteModel] ⚠️ Estos objetos NO están mapeados (no tendrán color ni interacción):",
@@ -169,14 +236,33 @@ function Scene({ layers, selectedId, hoveredId: externalHoveredId, onHover, onSe
         found.map((m) => m.name)
       );
     }
-  }, [meshList]);
+
+    const exportedGroups = [
+      "VIEW_SHELL_PARACHUTE",
+      "VIEW_ELECTRONICS",
+      "VIEW_EGG_PROTECTION",
+      "SHARED",
+    ].map((name) => ({ name, count: scene.getObjectByName(name)?.children.length ?? 0 }));
+    console.log("[SatelliteModel] Grupos de vistas exportados:", exportedGroups);
+  }, [meshList, scene]);
+
+  // Un mesh sin grupo pertenece únicamente a la vista completa. Esto evita
+  // mostrar accidentalmente restos de una exportación anterior en las vistas parciales.
+  useEffect(() => {
+    const visibleGroups = VISIBLE_GROUPS_BY_VIEW[viewIndex] ?? VISIBLE_GROUPS_BY_VIEW[3];
+
+    meshList.forEach((mesh) => {
+      const groupName = getOwningViewGroup(mesh, scene);
+      mesh.visible = visibleGroups === null || (groupName !== null && visibleGroups.has(groupName));
+    });
+  }, [meshList, scene, viewIndex]);
 
   // Aplicar colores según LAYERS y resaltar selección / hover.
   // El resalte usa el material emissive, así que se mantiene igual
   // aunque se haga zoom o se gire la cámara.
   useEffect(() => {
     meshList.forEach((mesh) => {
-      const layerId = MESH_TO_LAYER[mesh.name];
+      const layerId = resolveLayerId(mesh, scene);
       const layer = layerId ? layers.find((l) => l.id === layerId) : null;
 
       // Asegurar que el material sea individual (no compartido)
@@ -204,12 +290,12 @@ function Scene({ layers, selectedId, hoveredId: externalHoveredId, onHover, onSe
         }
       }
     });
-  }, [meshList, layers, selectedId, hoveredId]);
+  }, [meshList, layers, selectedId, hoveredId, scene]);
 
   // Aplicar posiciones: original + shell offset + explode offset
   useEffect(() => {
     meshList.forEach((mesh) => {
-      const original = originalPositions.current.get(mesh.name);
+      const original = originalPositions.current.get(mesh.uuid);
       if (!original) return;
 
       // Empezar desde la posición original del GLB
@@ -228,7 +314,7 @@ function Scene({ layers, selectedId, hoveredId: externalHoveredId, onHover, onSe
       }
 
       // Sumar offset de explosión (per-layer tiene prioridad sobre global)
-      const layerId = MESH_TO_LAYER[name];
+      const layerId = resolveLayerId(mesh, scene);
       const layerExplode = (explodePerLayer && layerId && layerId in explodePerLayer)
         ? explodePerLayer[layerId]
         : explode;
@@ -242,23 +328,21 @@ function Scene({ layers, selectedId, hoveredId: externalHoveredId, onHover, onSe
         }
       }
     });
-  }, [meshList, shellOpen, explode, explodePerLayer]);
+  }, [meshList, scene, shellOpen, explode, explodePerLayer]);
 
   // Eventos de interacción
   const handlePointerOver = useCallback(
     (e: ThreeEvent<PointerEvent>) => {
       e.stopPropagation();
-      const name = e.object.name;
-      const layerId = MESH_TO_LAYER[name] ?? null;
+      const layerId = resolveLayerId(e.object, scene);
       if (layerId) {
         setInternalHoveredId(layerId);
         onHover?.(layerId);
-        gl.domElement.style.cursor = "pointer";
         const rect = gl.domElement.getBoundingClientRect();
         onPointerData?.({ layerId, x: e.clientX - rect.left, y: e.clientY - rect.top });
       }
     },
-    [onHover, onPointerData, gl]
+    [onHover, onPointerData, gl, scene]
   );
 
   const handlePointerOut = useCallback(
@@ -266,20 +350,18 @@ function Scene({ layers, selectedId, hoveredId: externalHoveredId, onHover, onSe
       e.stopPropagation();
       setInternalHoveredId(null);
       onHover?.(null);
-      gl.domElement.style.cursor = "grab";
       onPointerData?.(null);
     },
-    [onHover, onPointerData, gl]
+    [onHover, onPointerData]
   );
 
   const handleClick = useCallback(
     (e: ThreeEvent<MouseEvent>) => {
       e.stopPropagation();
-      const name = e.object.name;
-      const layerId = MESH_TO_LAYER[name] ?? null;
+      const layerId = resolveLayerId(e.object, scene);
       onSelect?.(layerId);
     },
-    [onSelect]
+    [onSelect, scene]
   );
 
   return (
@@ -333,16 +415,18 @@ export function SatelliteModel({
   explode = 0,
   explodePerLayer,
   autoRotate = false,
+  viewIndex = 3,
 }: SatelliteModelProps) {
   const stageRef = useRef<HTMLDivElement>(null);
   const [tooltipPos, setTooltipPos] = useState<{ x: number; y: number } | null>(null);
   const [modelAvailable, setModelAvailable] = useState<boolean | null>(null);
 
   const tooltipData = useMemo<TooltipData | null>(() => {
-    const layer = selectedId ? layers.find((item) => item.id === selectedId) : null;
+    const activeId = selectedId ?? hoveredId;
+    const layer = activeId ? layers.find((item) => item.id === activeId) : null;
     if (!layer) return null;
     return { nombre: layer.nombre, modelo: layer.modelo, specs: layer.specs ?? {} };
-  }, [selectedId, layers]);
+  }, [selectedId, hoveredId, layers]);
 
   // Detectar si el archivo GLB existe
   useEffect(() => {
@@ -381,7 +465,7 @@ export function SatelliteModel({
         <directionalLight position={[-1, -0.5, -1]} intensity={0.3} />
 
         {modelAvailable ? (
-          <Bounds fit clip observe margin={1.6}>
+          <Bounds key={viewIndex} fit clip observe margin={1.6}>
             <Scene
               layers={layers}
               selectedId={selectedId}
@@ -392,6 +476,7 @@ export function SatelliteModel({
               explode={explode}
               explodePerLayer={explodePerLayer}
               onPointerData={handlePointerData}
+              viewIndex={viewIndex}
             />
           </Bounds>
         ) : (

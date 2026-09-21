@@ -126,8 +126,8 @@ function buildFilename(teamId: number): string {
  * Dispara la descarga del archivo .csv en el navegador.
  * Llamar desde el botón "Descargar .csv" en el dashboard.
  */
-export function exportTelemetryCsv(readings: TelemetryReading[]): void {
-  if (readings.length === 0) return;
+export function exportTelemetryCsv(readings: TelemetryReading[]): string | null {
+  if (readings.length === 0) return null;
 
   const csvContent = readingsToCsv(readings);
   const blob = new Blob([csvContent], { type: "text/csv;charset=utf-8;" });
@@ -147,4 +147,6 @@ export function exportTelemetryCsv(readings: TelemetryReading[]): void {
 
   // Libera la URL del objeto Blob después de un tick
   setTimeout(() => URL.revokeObjectURL(url), 100);
+
+  return filename;
 }

@@ -1,18 +1,23 @@
 "use client";
 
-import { useCallback } from "react";
+import { useCallback, useEffect, useState } from "react";
 import {
   AltitudeChart,
   TelemetryChart,
-  SensorFilterBar,
-  DataTable,
   OrientationViewerLoader,
 } from "@/components/dashboard";
 import { BatteryRocket, TelemetryModeBadge } from "@/components/ui";
-import type { Phase, DataTableColumn } from "@/components/dashboard";
-import type { TelemetryReading } from "@/lib/api";
 import { useLiveTelemetry } from "@/lib/hooks/useLiveTelemetry";
 import { exportTelemetryCsv } from "@/lib/utils/exportCsv";
+
+const CSV_HISTORY_STORAGE_KEY = "picoWeb.telemetryCsvHistory";
+
+interface CsvExportRecord {
+  id: string;
+  filename: string;
+  generatedAt: string;
+  recordCount: number;
+}
 
 /**
  * Vista 03 — Telemetría (Dashboard)
@@ -23,6 +28,11 @@ import { exportTelemetryCsv } from "@/lib/utils/exportCsv";
 export default function DashboardPage() {
   const { readings, status } = useLiveTelemetry();
   const loading = readings.length === 0 && status === "connecting";
+  const [csvHistory, setCsvHistory] = useState<CsvExportRecord[]>(readCsvHistory);
+
+  useEffect(() => {
+    window.localStorage.setItem(CSV_HISTORY_STORAGE_KEY, JSON.stringify(csvHistory));
+  }, [csvHistory]);
 
   /* ─── Última lectura ─── */
   const last = readings.length > 0 ? readings[readings.length - 1] : null;
@@ -116,37 +126,19 @@ export default function DashboardPage() {
   const lastGyro = last?.giroscopio ?? null;
   const lastAccel = last?.acelerometro ?? null;
 
-  /* ─── Filas de la tabla de datos crudos ─── */
-  const tableRows = readings.map((r) => ({
-    packet_count: String(r.packet_count),
-    team_id: String(r.team_id).padStart(4, "0"),
-    mission_time: r.mission_time,
-    estado: r.estado,
-    state: r.state,
-    altitud: r.altitud_m.toFixed(1),
-    temperatura: r.temperatura_c.toFixed(1),
-    voltage: r.voltage_v.toFixed(2),
-    temperatura_mpu: r.temperatura_mpu_c.toFixed(2),
-    presion: r.presion_hpa.toFixed(2),
-    acel_x: r.acelerometro.x.toFixed(2),
-    acel_y: r.acelerometro.y.toFixed(2),
-    acel_z: r.acelerometro.z.toFixed(2),
-    giro_x: r.giroscopio.x.toFixed(2),
-    giro_y: r.giroscopio.y.toFixed(2),
-    giro_z: r.giroscopio.z.toFixed(2),
-    mag_x: String(r.magnetometro.x),
-    mag_y: String(r.magnetometro.y),
-    mag_z: String(r.magnetometro.z),
-    rssi: r.rssi_dbm.toFixed(1),
-    lat: r.gps.lat.toFixed(6),
-    lng: r.gps.lng.toFixed(6),
-    satelites: String(r.gps.satelites),
-    timestamp: r.timestamp.replace("T", " ").replace(".000Z", ""),
-  }));
-
   /* ─── Exportación CSV (GSR-02) ─── */
   const handleExportCsv = useCallback(async () => {
-    exportTelemetryCsv(readings);
+    const filename = exportTelemetryCsv(readings);
+    if (!filename) return;
+
+    const record: CsvExportRecord = {
+      id: `${filename}-${Date.now()}`,
+      filename,
+      generatedAt: new Date().toISOString(),
+      recordCount: readings.length,
+    };
+
+    setCsvHistory((previous) => [record, ...previous].slice(0, 20));
   }, [readings]);
 
   return (
@@ -216,22 +208,6 @@ export default function DashboardPage() {
         {/* ── Gráfica obligatoria TR-02: Altitud vs Tiempo ── */}
         <AltitudeChart readings={readings} />
 
-        {/* ── Barra de filtros y exportación ── */}
-        <SensorFilterBar
-          phases={PHASES}
-          summary={
-            loading
-              ? "Conectando…"
-              : `${packetCount} paquetes recibidos`
-          }
-          exportButton={
-            <CsvExportButton
-              onExport={handleExportCsv}
-              disabled={readings.length === 0}
-            />
-          }
-        />
-
         {/* ── Gráficas complementarias ── */}
         <div className="chart-grid" style={{ marginTop: "var(--space-4)" }}>
           <TelemetryChart
@@ -273,8 +249,12 @@ export default function DashboardPage() {
           <OrientationViewerLoader gyro={lastGyro} accel={lastAccel} />
         </div>
 
-        {/* ── Tabla de datos crudos ── */}
-        <DataTable columns={TABLE_COLUMNS} rows={tableRows} />
+        {/* ── Historial de CSV exportados ── */}
+        <CsvExportHistory
+          files={csvHistory}
+          onExport={handleExportCsv}
+          disabled={readings.length === 0}
+        />
       </div>
     </section>
   );
@@ -366,38 +346,83 @@ function CsvExportButton({ onExport, disabled = false }: CsvExportButtonProps) {
   );
 }
 
+interface CsvExportHistoryProps {
+  files: CsvExportRecord[];
+  onExport: () => Promise<void>;
+  disabled?: boolean;
+}
+
+function CsvExportHistory({ files, onExport, disabled = false }: CsvExportHistoryProps) {
+  return (
+    <section className="panel csv-history" aria-labelledby="csvHistoryTitle">
+      <div className="panel__title">
+        <div>
+          <h3 id="csvHistoryTitle" style={{ fontSize: "0.98rem" }}>
+            Archivos CSV exportados
+          </h3>
+          <p className="muted" style={{ margin: "0.3rem 0 0", fontSize: "0.78rem" }}>
+            Historial local de las descargas generadas desde esta estación.
+          </p>
+        </div>
+        <CsvExportButton onExport={onExport} disabled={disabled} />
+      </div>
+
+      {files.length > 0 ? (
+        <ul className="csv-history__list">
+          {files.map((file) => (
+            <li className="csv-history__item" key={file.id}>
+              <span className="csv-history__badge" aria-hidden="true">CSV</span>
+              <span className="csv-history__details">
+                <strong>{file.filename}</strong>
+                <span>
+                  Generado: {formatExportDate(file.generatedAt)} · {file.recordCount} registros
+                </span>
+              </span>
+            </li>
+          ))}
+        </ul>
+      ) : (
+        <p className="csv-history__empty">
+          Todavía no se ha generado ningún archivo CSV.
+        </p>
+      )}
+    </section>
+  );
+}
+
+function formatExportDate(isoDate: string) {
+  return new Intl.DateTimeFormat("es-MX", {
+    dateStyle: "medium",
+    timeStyle: "medium",
+  }).format(new Date(isoDate));
+}
+
+function readCsvHistory(): CsvExportRecord[] {
+  if (typeof window === "undefined") return [];
+
+  try {
+    const parsed: unknown = JSON.parse(
+      window.localStorage.getItem(CSV_HISTORY_STORAGE_KEY) ?? "[]"
+    );
+
+    if (!Array.isArray(parsed)) return [];
+
+    return parsed.filter(isCsvExportRecord).slice(0, 20);
+  } catch {
+    return [];
+  }
+}
+
+function isCsvExportRecord(value: unknown): value is CsvExportRecord {
+  if (!value || typeof value !== "object") return false;
+
+  const record = value as Record<string, unknown>;
+  return (
+    typeof record.id === "string" &&
+    typeof record.filename === "string" &&
+    typeof record.generatedAt === "string" &&
+    typeof record.recordCount === "number"
+  );
+}
+
 /* ─── Datos estáticos ─── */
-
-const PHASES: Phase[] = [
-  { key: "pre-lanzamiento", label: "Pre-lanzamiento" },
-  { key: "ascenso", label: "Ascenso" },
-  { key: "descenso", label: "Descenso" },
-  { key: "aterrizado", label: "Aterrizado" },
-];
-
-const TABLE_COLUMNS: DataTableColumn[] = [
-  { key: "packet_count", label: "PKT#" },
-  { key: "team_id",      label: "TEAM_ID" },
-  { key: "mission_time", label: "MISSION_TIME" },
-  { key: "state",        label: "STATE" },
-  { key: "altitud",      label: "ALTITUDE (m)" },
-  { key: "temperatura",  label: "TEMP (°C)" },
-  { key: "voltage",      label: "VOLTAGE (V)" },
-  { key: "acel_x",       label: "ACCEL_X (g)" },
-  { key: "acel_y",       label: "ACCEL_Y (g)" },
-  { key: "acel_z",       label: "ACCEL_Z (g)" },
-  { key: "temperatura_mpu", label: "Temp. MPU (°C)" },
-  { key: "presion",      label: "Pres. (hPa)" },
-  { key: "giro_x",       label: "Giro X (°/s)" },
-  { key: "giro_y",       label: "Giro Y (°/s)" },
-  { key: "giro_z",       label: "Giro Z (°/s)" },
-  { key: "mag_x",        label: "Mag X" },
-  { key: "mag_y",        label: "Mag Y" },
-  { key: "mag_z",        label: "Mag Z" },
-  { key: "rssi",         label: "RSSI (dBm)" },
-  { key: "lat",          label: "Lat." },
-  { key: "lng",          label: "Lng." },
-  { key: "satelites",    label: "Sat." },
-  { key: "timestamp",    label: "Timestamp (UTC)" },
-  { key: "estado",       label: "Fase" },
-];

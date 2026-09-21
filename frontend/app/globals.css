@@ -547,6 +547,47 @@ hr { border: 0; border-top: 1px solid var(--line-blueprint); margin: var(--space
   border-radius: var(--radius);
   background: var(--bg-panel);
 }
+.view-control {
+  flex: 1 1 100%;
+  display: grid;
+  gap: var(--space-2);
+  padding-bottom: var(--space-3);
+  border-bottom: 1px solid var(--line-blueprint);
+}
+.view-control__head {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: var(--space-3);
+}
+.view-control__head label {
+  font-family: var(--font-mono);
+  font-size: 0.7rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--text-muted);
+}
+.view-control__head output {
+  color: var(--accent-amber);
+  font-size: 0.82rem;
+  font-weight: 600;
+}
+.view-control > input[type="range"] {
+  width: 100%;
+}
+.view-control__labels {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: var(--space-2);
+  color: var(--text-muted);
+  font-family: var(--font-mono);
+  font-size: 0.62rem;
+  line-height: 1.35;
+}
+.view-control__labels span { text-align: center; }
+.view-control__labels span:first-child { text-align: left; }
+.view-control__labels span:last-child { text-align: right; }
+.view-control__labels .is-active { color: var(--accent-amber); }
 .control-group { display: flex; align-items: center; gap: var(--space-2); }
 .control-group label {
   font-family: var(--font-mono);
@@ -727,6 +768,61 @@ table.data tbody tr:hover td { background: rgba(42, 59, 87, 0.3); }
   flex-wrap: wrap;
 }
 .pager__info { font-family: var(--font-mono); font-size: 0.75rem; color: var(--text-muted); }
+
+.csv-history {
+  display: grid;
+  gap: var(--space-4);
+  margin-top: var(--space-6);
+  padding: var(--space-4);
+}
+.csv-history .panel__title { margin: 0; align-items: flex-start; }
+.csv-history__list {
+  display: grid;
+  gap: var(--space-2);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+.csv-history__item {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  min-width: 0;
+  padding: var(--space-3);
+  border: 1px solid var(--line-blueprint);
+  border-radius: var(--radius-sm);
+  background: var(--bg-panel-2);
+}
+.csv-history__badge {
+  flex: none;
+  padding: 4px 6px;
+  border: 1px solid var(--accent-green);
+  border-radius: 3px;
+  color: var(--accent-green);
+  font-family: var(--font-mono);
+  font-size: 0.62rem;
+  letter-spacing: 0.08em;
+}
+.csv-history__details {
+  display: grid;
+  gap: 3px;
+  min-width: 0;
+}
+.csv-history__details strong {
+  overflow: hidden;
+  color: var(--text-primary);
+  font-family: var(--font-mono);
+  font-size: 0.78rem;
+  font-weight: 500;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.csv-history__details span,
+.csv-history__empty {
+  color: var(--text-muted);
+  font-size: 0.78rem;
+}
+.csv-history__empty { margin: 0; }
 
 /* ===========================================================================
    RECUPERACIÓN
@@ -969,7 +1065,7 @@ table.data tbody tr:hover td { background: rgba(42, 59, 87, 0.3); }
 .tooltip3d dd { margin: 0; font-family: var(--font-mono); }
 
 /* ===========================================================================
-   BATTERY ROCKET — indicador de batería con SVG de cohete
+   BATTERY ROCKET — indicador de batería con SVG de rayo
    =========================================================================== */
 .battery-rocket {
   display: inline-flex;
@@ -983,23 +1079,17 @@ table.data tbody tr:hover td { background: rgba(42, 59, 87, 0.3); }
   transition: border-color 200ms ease;
 }
 .battery-rocket__icon { width: 28px; height: 28px; }
-.battery-rocket__body { fill: var(--accent-green); }
-.battery-rocket__flame { fill: var(--accent-amber); opacity: 0.7; }
-.battery-rocket__fin { fill: var(--text-muted); }
-.battery-rocket__window { fill: var(--bg-deep); stroke: var(--accent-amber); stroke-width: 0.8; }
+.battery-rocket__bolt { fill: var(--accent-green); }
 .battery-rocket__value { font-weight: 600; color: var(--text-primary); }
 
 .battery-rocket--healthy { border-color: var(--accent-green); }
-.battery-rocket--healthy .battery-rocket__body { fill: var(--accent-green); }
-.battery-rocket--healthy .battery-rocket__flame { fill: var(--accent-green); opacity: 0.5; }
+.battery-rocket--healthy .battery-rocket__bolt { fill: var(--accent-green); }
 
 .battery-rocket--warning { border-color: var(--accent-amber); }
-.battery-rocket--warning .battery-rocket__body { fill: var(--accent-amber); }
-.battery-rocket--warning .battery-rocket__flame { fill: var(--accent-amber); opacity: 0.9; }
+.battery-rocket--warning .battery-rocket__bolt { fill: var(--accent-amber); }
 
 .battery-rocket--critical { border-color: #ef4444; }
-.battery-rocket--critical .battery-rocket__body { fill: #ef4444; }
-.battery-rocket--critical .battery-rocket__flame { fill: #ef4444; opacity: 1; }
+.battery-rocket--critical .battery-rocket__bolt { fill: #ef4444; }
 
 /* ===========================================================================
    TELEMETRY MODE BADGE — indicador de modo (simulación / tiempo real)

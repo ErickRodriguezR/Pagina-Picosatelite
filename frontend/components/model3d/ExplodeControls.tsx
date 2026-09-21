@@ -11,48 +11,32 @@ export interface LayerInfo {
 export interface ExplodeControlsProps {
   /** Lista de capas disponibles para controles individuales */
   layers?: LayerInfo[];
-  onShellToggle?: (open: boolean) => void;
-  onExplodeChange?: (value: number) => void;
+  /** Etiquetas de las vistas del ensamble controladas por el slider. */
+  viewLabels?: readonly string[];
+  viewIndex?: number;
+  onViewChange?: (index: number) => void;
   /** Callback cuando cambia la explosión individual de una capa */
   onExplodePerLayerChange?: (perLayer: Record<string, number>) => void;
   onAutoRotateToggle?: (on: boolean) => void;
   onResetView?: () => void;
-  onPlaySequence?: () => void;
 }
 
 /**
- * Barra de controles del visor 3D: abrir carcasa, slider de explosión global,
- * sliders individuales por componente, auto-rotar, reiniciar vista y secuencia.
+ * Barra de controles del visor 3D: selector de vista, sliders individuales,
+ * auto-rotar y reiniciar vista.
  */
 export function ExplodeControls({
   layers = [],
-  onShellToggle,
-  onExplodeChange,
+  viewLabels = ["Carcasa y paracaídas", "Componentes y PCBs", "Protección del huevo", "Todo junto"],
+  viewIndex = 0,
+  onViewChange,
   onExplodePerLayerChange,
   onAutoRotateToggle,
   onResetView,
-  onPlaySequence,
 }: ExplodeControlsProps) {
-  const [shellOpen, setShellOpen] = useState(false);
-  const [explode, setExplode] = useState(0);
   const [autoRotate, setAutoRotate] = useState(false);
   const [perLayer, setPerLayer] = useState<Record<string, number>>({});
   const [showIndividual, setShowIndividual] = useState(false);
-
-  const handleShell = useCallback(() => {
-    const next = !shellOpen;
-    setShellOpen(next);
-    onShellToggle?.(next);
-  }, [shellOpen, onShellToggle]);
-
-  const handleExplode = useCallback(
-    (e: React.ChangeEvent<HTMLInputElement>) => {
-      const value = Number(e.target.value);
-      setExplode(value);
-      onExplodeChange?.(value / 100);
-    },
-    [onExplodeChange]
-  );
 
   const handlePerLayerChange = useCallback(
     (layerId: string, value: number) => {
@@ -72,51 +56,44 @@ export function ExplodeControls({
   }, [autoRotate, onAutoRotateToggle]);
 
   const handleReset = useCallback(() => {
-    setShellOpen(false);
-    setExplode(0);
     setAutoRotate(false);
     setPerLayer({});
     onExplodePerLayerChange?.({});
     onResetView?.();
   }, [onResetView, onExplodePerLayerChange]);
 
-  const handleSequence = useCallback(() => {
-    setShellOpen(true);
-    setExplode(100);
-    onPlaySequence?.();
-  }, [onPlaySequence]);
-
   return (
     <div className="stage-controls">
-      <button
-        className="btn btn--sm"
-        type="button"
-        aria-pressed={shellOpen}
-        onClick={handleShell}
-      >
-        <ShellIcon />
-        {shellOpen ? "Cerrar carcasa" : "Abrir carcasa"}
-      </button>
-
-      <div className="control-group">
-        <label htmlFor="explodeRange">Explosión global</label>
+      <div className="view-control">
+        <div className="view-control__head">
+          <label htmlFor="modelViewRange">Vista del ensamble</label>
+          <output id="modelViewValue" htmlFor="modelViewRange">
+            {viewLabels[viewIndex] ?? viewLabels[0]}
+          </output>
+        </div>
         <input
           type="range"
-          id="explodeRange"
+          id="modelViewRange"
           min="0"
-          max="100"
-          value={explode}
+          max={Math.max(viewLabels.length - 1, 0)}
           step="1"
-          onChange={handleExplode}
-          aria-describedby="explodeValue"
+          value={Math.min(Math.max(viewIndex, 0), Math.max(viewLabels.length - 1, 0))}
+          onChange={(event) => onViewChange?.(Number(event.target.value))}
+          list="modelViewSteps"
+          aria-valuetext={`${viewLabels[viewIndex] ?? viewLabels[0]} (${viewIndex + 1} de ${viewLabels.length})`}
         />
-        <span
-          className="mono muted"
-          id="explodeValue"
-          style={{ fontSize: "0.72rem", minWidth: "3ch" }}
-        >
-          {explode}%
-        </span>
+        <datalist id="modelViewSteps">
+          {viewLabels.map((label, index) => (
+            <option key={label} value={index} label={label} />
+          ))}
+        </datalist>
+        <div className="view-control__labels" aria-hidden="true">
+          {viewLabels.map((label, index) => (
+            <span key={label} className={index === viewIndex ? "is-active" : undefined}>
+              {index + 1}. {label}
+            </span>
+          ))}
+        </div>
       </div>
 
       {layers.length > 0 && (
@@ -195,25 +172,9 @@ export function ExplodeControls({
       <button className="btn btn--sm" type="button" onClick={handleReset}>
         Reiniciar vista
       </button>
-      <button className="btn btn--sm" type="button" onClick={handleSequence}>
-        Secuencia de apertura
-      </button>
       <span className="mono muted" style={{ fontSize: "0.7rem", marginLeft: "auto" }}>
         Teclado: Tab por la lista de componentes
       </span>
     </div>
-  );
-}
-
-function ShellIcon() {
-  return (
-    <svg width="15" height="15" viewBox="0 0 16 16" fill="none" aria-hidden="true">
-      <path
-        d="M8 2v12M4 5 1.5 8 4 11M12 5l2.5 3-2.5 3"
-        stroke="currentColor"
-        strokeWidth="1.3"
-        strokeLinecap="round"
-      />
-    </svg>
   );
 }
