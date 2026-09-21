@@ -1,12 +1,14 @@
 "use client";
 
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import {
   AltitudeChart,
-  TelemetryChart,
+  LiveTelemetryChart,
   OrientationViewerLoader,
 } from "@/components/dashboard";
 import { BatteryRocket, TelemetryModeBadge } from "@/components/ui";
+import type { PlotlyTrace } from "@/components/dashboard";
+import type { TelemetryReading } from "@/lib/api";
 import { useLiveTelemetry } from "@/lib/hooks/useLiveTelemetry";
 import { exportTelemetryCsv } from "@/lib/utils/exportCsv";
 
@@ -141,6 +143,122 @@ export default function DashboardPage() {
     setCsvHistory((previous) => [record, ...previous].slice(0, 20));
   }, [readings]);
 
+  /* ─── Tiempo base para el eje X de las gráficas ─── */
+  const t0 = readings.length > 0 ? Date.parse(readings[0].timestamp) : 0;
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  const xSeconds = useMemo(
+    () => readings.map((r) => parseFloat(((Date.parse(r.timestamp) - t0) / 1000).toFixed(1))),
+    [readings]
+  );
+
+  /* ─── buildTraces: Temperatura ─── */
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  const buildTracesTemp = useCallback((_r: TelemetryReading[]): PlotlyTrace[] => [
+    {
+      x: xSeconds, y: _r.map((r) => r.temperatura_c),
+      type: "scatter", mode: "lines", name: "BMP280 (°C)",
+      line: { color: "#f97316", width: 2 },
+      hovertemplate: "<b>t=%{x}s</b><br>%{y:.1f} °C<extra>BMP280</extra>",
+    },
+    {
+      x: xSeconds, y: _r.map((r) => r.temperatura_mpu_c),
+      type: "scatter", mode: "lines", name: "MPU-6050 (°C)",
+      line: { color: "#fb923c", width: 2, dash: "dot" },
+      hovertemplate: "<b>t=%{x}s</b><br>%{y:.1f} °C<extra>MPU</extra>",
+    },
+  ], [xSeconds]);
+
+  /* ─── buildTraces: Presión ─── */
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  const buildTracesPresion = useCallback((_r: TelemetryReading[]): PlotlyTrace[] => [
+    {
+      x: xSeconds, y: _r.map((r) => r.presion_hpa),
+      type: "scatter", mode: "lines", name: "Presión (hPa)",
+      line: { color: "#38bdf8", width: 2 },
+      hovertemplate: "<b>t=%{x}s</b><br>%{y:.2f} hPa<extra></extra>",
+    },
+  ], [xSeconds]);
+
+  /* ─── buildTraces: Voltaje de batería ─── */
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  const buildTracesVoltaje = useCallback((_r: TelemetryReading[]): PlotlyTrace[] => [
+    {
+      x: xSeconds, y: _r.map((r) => r.voltage_v),
+      type: "scatter", mode: "lines+markers", name: "Voltaje (V)",
+      line: { color: "#a78bfa", width: 2 },
+      marker: { size: 4, color: "#a78bfa" },
+      hovertemplate: "<b>t=%{x}s</b><br>%{y:.2f} V<extra></extra>",
+    },
+  ], [xSeconds]);
+
+  /* ─── buildTraces: IMU (|aceleración| y |giroscopio|) ─── */
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  const buildTracesImu = useCallback((_r: TelemetryReading[]): PlotlyTrace[] => [
+    {
+      x: xSeconds,
+      y: _r.map((r) => {
+        const { x, y, z } = r.acelerometro;
+        return parseFloat(Math.sqrt(x * x + y * y + z * z).toFixed(3));
+      }),
+      type: "scatter", mode: "lines", name: "|a| (g)",
+      line: { color: "#34d399", width: 2 },
+      hovertemplate: "<b>t=%{x}s</b><br>|a|=%{y:.3f} g<extra></extra>",
+    },
+    {
+      x: xSeconds,
+      y: _r.map((r) => {
+        const { x, y, z } = r.giroscopio;
+        return parseFloat(Math.sqrt(x * x + y * y + z * z).toFixed(2));
+      }),
+      type: "scatter", mode: "lines", name: "|ω| (°/s)",
+      line: { color: "#6ee7b7", width: 2, dash: "dot" },
+      yaxis: "y2",
+      hovertemplate: "<b>t=%{x}s</b><br>|ω|=%{y:.2f} °/s<extra></extra>",
+    },
+  ], [xSeconds]);
+
+  /* ─── buildTraces: Magnetómetro XYZ ─── */
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  const buildTracesMag = useCallback((_r: TelemetryReading[]): PlotlyTrace[] => [
+    {
+      x: xSeconds, y: _r.map((r) => r.magnetometro.x),
+      type: "scatter", mode: "lines", name: "Mag X",
+      line: { color: "#f43f5e", width: 2 },
+      hovertemplate: "<b>t=%{x}s</b><br>X=%{y}<extra></extra>",
+    },
+    {
+      x: xSeconds, y: _r.map((r) => r.magnetometro.y),
+      type: "scatter", mode: "lines", name: "Mag Y",
+      line: { color: "#fb7185", width: 2, dash: "dash" },
+      hovertemplate: "<b>t=%{x}s</b><br>Y=%{y}<extra></extra>",
+    },
+    {
+      x: xSeconds, y: _r.map((r) => r.magnetometro.z),
+      type: "scatter", mode: "lines", name: "Mag Z",
+      line: { color: "#fda4af", width: 2, dash: "dot" },
+      hovertemplate: "<b>t=%{x}s</b><br>Z=%{y}<extra></extra>",
+    },
+  ], [xSeconds]);
+
+  /* ─── buildTraces: Trayectoria 3D GPS ─── */
+  const buildTracesGps = useCallback((_r: TelemetryReading[]): PlotlyTrace[] => {
+    const lats = _r.map((r) => r.gps.lat);
+    const lngs = _r.map((r) => r.gps.lng);
+    const alts = _r.map((r) => r.gps.alt_m);
+    return [
+      {
+        x: lngs, y: lats, z: alts,
+        type: "scatter3d", mode: "lines+markers", name: "Trayectoria GPS",
+        line: { color: "#facc15", width: 3 },
+        marker: {
+          size: 3, color: alts, colorscale: "Viridis", showscale: true,
+          colorbar: { title: { text: "Alt (m)" }, thickness: 10, len: 0.6 },
+        },
+        hovertemplate: "Lng: %{x:.6f}<br>Lat: %{y:.6f}<br>Alt: %{z:.1f} m<extra></extra>",
+      },
+    ];
+  }, []);
+
   return (
     <section aria-labelledby="telemetryTitle">
       <div className="container section section--tight">
@@ -210,37 +328,67 @@ export default function DashboardPage() {
 
         {/* ── Gráficas complementarias ── */}
         <div className="chart-grid" style={{ marginTop: "var(--space-4)" }}>
-          <TelemetryChart
-            id="plotTemp"
+          <LiveTelemetryChart
             title="Temperatura"
             hint="BMP280 + MPU-6050 (interna)"
+            readings={readings}
+            buildTraces={buildTracesTemp}
+            layoutOverride={{
+              yaxis: { title: { text: "°C", standoff: 8 }, gridcolor: "#1e293b", zerolinecolor: "#334155", tickfont: { size: 10 } },
+            }}
           />
-          <TelemetryChart
-            id="plotPressure"
+          <LiveTelemetryChart
             title="Presión barométrica"
             hint="BMP280"
+            readings={readings}
+            buildTraces={buildTracesPresion}
+            layoutOverride={{
+              yaxis: { title: { text: "hPa", standoff: 8 }, gridcolor: "#1e293b", zerolinecolor: "#334155", tickfont: { size: 10 } },
+            }}
           />
-          <TelemetryChart
-            id="plotPower"
-            title="Enlace LoRa"
-            hint="RSSI dBm"
+          <LiveTelemetryChart
+            title="Voltaje de batería"
+            hint="Batería"
+            readings={readings}
+            buildTraces={buildTracesVoltaje}
+            layoutOverride={{
+              yaxis: { title: { text: "V", standoff: 8 }, gridcolor: "#1e293b", zerolinecolor: "#334155", tickfont: { size: 10 } },
+            }}
           />
-          <TelemetryChart
-            id="plotImu"
+          <LiveTelemetryChart
             title="Inercial"
-            hint="MPU-6050 · |a| y |ω|"
+            hint="MPU-6050 · |a| (g) y |ω| (°/s)"
+            readings={readings}
+            buildTraces={buildTracesImu}
+            layoutOverride={{
+              yaxis:  { title: { text: "|a| (g)", standoff: 8 }, gridcolor: "#1e293b", zerolinecolor: "#334155", tickfont: { size: 10 } },
+              yaxis2: { title: { text: "|ω| (°/s)", standoff: 8 }, overlaying: "y", side: "right", gridcolor: "#1e293b", zerolinecolor: "#334155", tickfont: { size: 10 } },
+            }}
           />
-          <TelemetryChart
-            id="plotMag"
+          <LiveTelemetryChart
             title="Magnetómetro"
             hint="QMC5883P · campo magnético XYZ"
+            readings={readings}
+            buildTraces={buildTracesMag}
+            layoutOverride={{
+              yaxis: { title: { text: "µT", standoff: 8 }, gridcolor: "#1e293b", zerolinecolor: "#334155", tickfont: { size: 10 } },
+            }}
           />
-          <TelemetryChart
-            id="plotTrajectory"
+          <LiveTelemetryChart
             title="Trayectoria 3D"
             hint="GPS ATGM336H · lat/lng/altitud, arrastra para girar"
             wide
             tall
+            readings={readings}
+            buildTraces={buildTracesGps}
+            layoutOverride={{
+              scene: {
+                xaxis: { title: "Longitud", gridcolor: "#1e293b", zerolinecolor: "#334155" },
+                yaxis: { title: "Latitud",  gridcolor: "#1e293b", zerolinecolor: "#334155" },
+                zaxis: { title: "Altitud (m)", gridcolor: "#1e293b", zerolinecolor: "#334155" },
+                bgcolor: "transparent",
+              },
+            }}
           />
         </div>
 
