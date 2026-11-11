@@ -838,6 +838,14 @@ table.data tbody tr:hover td { background: rgba(42, 59, 87, 0.3); }
   z-index: 0;
 }
 
+.telemetry-map-canvas {
+  width: 100%;
+  height: clamp(380px, 50vh, 550px);
+  border-radius: var(--radius);
+  background: var(--bg-panel-2);
+  z-index: 0;
+}
+
 .map-marker {
   display: grid;
   place-items: center;
@@ -852,6 +860,54 @@ table.data tbody tr:hover td { background: rgba(42, 59, 87, 0.3); }
 }
 .map-marker--launch { background: var(--accent-amber); color: #0B1220; box-shadow: 0 0 0 4px rgba(255, 176, 32, 0.22); }
 .map-marker--me { background: var(--text-primary); color: #0B1220; box-shadow: 0 0 0 4px rgba(231, 236, 242, 0.2); }
+.map-marker--sat {
+  width: 30px;
+  height: 30px;
+  font-size: 14px;
+  background: var(--bg-panel);
+  border: 2px solid var(--accent-green);
+  box-shadow: 0 0 0 0 rgba(53, 208, 127, 0.7);
+  animation: pulse-sat-ring 2s infinite ease-out;
+}
+
+@keyframes pulse-sat-ring {
+  0% { box-shadow: 0 0 0 0 rgba(53, 208, 127, 0.8); }
+  70% { box-shadow: 0 0 0 12px rgba(53, 208, 127, 0); }
+  100% { box-shadow: 0 0 0 0 rgba(53, 208, 127, 0); }
+}
+
+/* Leaflet Dark Theme Overrides */
+.leaflet-popup-content-wrapper {
+  background: var(--bg-panel) !important;
+  color: var(--text-primary) !important;
+  border: 1px solid var(--line-blueprint);
+  border-radius: var(--radius-sm) !important;
+  box-shadow: 0 12px 30px -8px rgba(0, 0, 0, 0.8) !important;
+}
+.leaflet-popup-tip {
+  background: var(--bg-panel) !important;
+  border: 1px solid var(--line-blueprint);
+}
+.leaflet-container {
+  font-family: var(--font-body) !important;
+  background-color: var(--bg-panel-2) !important;
+}
+.leaflet-bar a {
+  background-color: var(--bg-panel) !important;
+  color: var(--text-primary) !important;
+  border-color: var(--line-blueprint) !important;
+}
+.leaflet-bar a:hover {
+  background-color: var(--bg-panel-2) !important;
+  color: var(--accent-amber) !important;
+}
+.leaflet-control-scale-line {
+  background: rgba(18, 27, 46, 0.85) !important;
+  border-color: var(--line-blueprint) !important;
+  color: var(--text-muted) !important;
+  font-family: var(--font-mono) !important;
+  font-size: 10px !important;
+}
 
 .route-steps {
   list-style: none;

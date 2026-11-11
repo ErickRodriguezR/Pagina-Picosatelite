@@ -5,6 +5,7 @@ import {
   AltitudeChart,
   LiveTelemetryChart,
   OrientationViewerLoader,
+  TelemetryMapLoader,
 } from "@/components/dashboard";
 import { BatteryRocket, TelemetryModeBadge } from "@/components/ui";
 import type { PlotlyTrace } from "@/components/dashboard";
@@ -13,6 +14,7 @@ import { useLiveTelemetry } from "@/lib/hooks/useLiveTelemetry";
 import { exportTelemetryCsv } from "@/lib/utils/exportCsv";
 
 const CSV_HISTORY_STORAGE_KEY = "picoWeb.telemetryCsvHistory";
+const LAUNCH_SITE = { lat: 19.475624, lng: -102.07301 };
 
 interface CsvExportRecord {
   id: string;
@@ -390,6 +392,11 @@ export default function DashboardPage() {
               },
             }}
           />
+        </div>
+
+        {/* ── Mapa de vuelo en tiempo real (GPS 2D) ── */}
+        <div style={{ marginTop: "var(--space-6)" }}>
+          <TelemetryMapLoader readings={readings} launchSite={LAUNCH_SITE} />
         </div>
 
         {/* ── Visor 3D de orientación ── */}

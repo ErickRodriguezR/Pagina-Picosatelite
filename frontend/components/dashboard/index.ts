@@ -18,3 +18,6 @@ export type { DataTableColumn, DataTableProps } from "./DataTable";
 
 export { OrientationViewerLoader } from "./OrientationViewerLoader";
 export type { OrientationViewerProps } from "./OrientationViewer";
+
+export { TelemetryMapLoader } from "./TelemetryMapLoader";
+export type { TelemetryMapProps } from "./TelemetryMap";
